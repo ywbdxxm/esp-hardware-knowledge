@@ -447,7 +447,7 @@ git commit -m "feat: add hash-verified PDF page rendering"
 - Create: `src/espdocs/cli.py`
 - Create: `tests/test_cli.py`
 
-- [ ] **Step 1: Write failing CLI contract tests**
+- [x] **Step 1: Write failing CLI contract tests**
 
 Use Typer's `CliRunner`. Test `doctor`, `ingest --dry-run`, `search`, `show`, `source`, and `--json`. JSON responses contain `schema_version`, stable field names, UTF-8 Chinese, and non-zero exit codes for invalid filters, stale source hashes, missing indexes, and empty queries.
 
@@ -463,19 +463,19 @@ def test_search_json_includes_traceability(cli_runner, seeded_runtime):
     assert "requires_source_check" in payload["results"][0]
 ```
 
-- [ ] **Step 2: Run CLI tests and confirm failure**
+- [x] **Step 2: Run CLI tests and confirm failure**
 
 Run: `uv run pytest tests/test_cli.py -v`
 
 Expected: FAIL because the CLI boundary is absent.
 
-- [ ] **Step 3: Implement commands and error mapping**
+- [x] **Step 3: Implement commands and error mapping**
 
 Wire commands to the existing modules without duplicating domain logic. `ingest` supports `--dry-run` and optional `--document`; `search` supports `--chip`, `--type`, `--limit`, and `--json`; `show` accepts a result/page ID; `source` verifies and renders; `doctor` reports Python, Docling, RapidOCR, PyMuPDF, SQLite/FTS5, source roots, disk paths, and index state; `verify` delegates to Task 9.
 
 Map configuration errors to exit 2, unavailable runtime/index to exit 3, stale or invalid source to exit 4, conversion failures to exit 5, and unexpected failures to exit 1. Never print a traceback unless `--debug` is passed.
 
-- [ ] **Step 4: Run CLI tests and manual help**
+- [x] **Step 4: Run CLI tests and manual help**
 
 Run:
 
@@ -487,7 +487,7 @@ uv run espdocs doctor --json
 
 Expected: tests PASS, help lists all six commands, and doctor returns valid schema-versioned JSON.
 
-- [ ] **Step 5: Commit the CLI**
+- [x] **Step 5: Commit the CLI**
 
 ```powershell
 git add src/espdocs/cli.py tests/test_cli.py

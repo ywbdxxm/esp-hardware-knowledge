@@ -76,3 +76,21 @@ class SourceView:
     evidence_grade: str
     previous_page: int | None
     next_page: int | None
+
+
+@dataclass(frozen=True)
+class IndexedPage:
+    page_id: int
+    document_id: str
+    chip: str
+    document_type: str
+    title: str
+    version: str
+    source_path: Path
+    sha256: str
+    pdf_page: int
+    markdown_path: Path
+    text: str
+    content_type: str
+    warnings: tuple[str, ...]
+    verified: bool

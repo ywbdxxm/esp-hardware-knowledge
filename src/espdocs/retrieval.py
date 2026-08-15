@@ -10,7 +10,7 @@ from contextlib import closing
 from pathlib import Path
 
 from espdocs.evidence import classify_evidence
-from espdocs.models import SearchResult
+from espdocs.models import IndexedPage, SearchResult
 
 
 class RetrievalError(RuntimeError):
@@ -174,3 +174,39 @@ class SearchService:
             )
         )
         return [item[2] for item in ranked[:limit]]
+
+
+def get_indexed_page(database_path: Path, page_id: int) -> IndexedPage:
+    if not database_path.is_file():
+        raise RetrievalError(f"Search index does not exist: {database_path}")
+    with closing(sqlite3.connect(database_path)) as connection:
+        connection.row_factory = sqlite3.Row
+        row = connection.execute(
+            """
+            SELECT p.id AS page_id, p.document_id, p.pdf_page, p.markdown_path,
+                   p.text, p.content_type, p.warnings_json, p.verified,
+                   d.chip, d.document_type, d.title, d.version, d.source_path, d.sha256
+            FROM pages p
+            JOIN documents d ON d.document_id = p.document_id
+            WHERE p.id = ?
+            """,
+            (page_id,),
+        ).fetchone()
+    if row is None:
+        raise RetrievalError(f"Indexed page ID does not exist: {page_id}")
+    return IndexedPage(
+        page_id=int(row["page_id"]),
+        document_id=str(row["document_id"]),
+        chip=str(row["chip"]),
+        document_type=str(row["document_type"]),
+        title=str(row["title"]),
+        version=str(row["version"]),
+        source_path=Path(row["source_path"]),
+        sha256=str(row["sha256"]),
+        pdf_page=int(row["pdf_page"]),
+        markdown_path=Path(row["markdown_path"]),
+        text=str(row["text"]),
+        content_type=str(row["content_type"]),
+        warnings=tuple(json.loads(row["warnings_json"])),
+        verified=bool(row["verified"]),
+    )
