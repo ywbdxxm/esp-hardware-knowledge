@@ -137,7 +137,7 @@ git commit -m "build: bootstrap espdocs uv project"
 - Create: `src/espdocs/catalog.py`
 - Create: `tests/test_catalog.py`
 
-- [ ] **Step 1: Write failing catalog tests**
+- [x] **Step 1: Write failing catalog tests**
 
 Tests must prove that discovery is allow-list based, recursive only inside the two configured roots, stable under ordering changes, and records SHA-256 and one-based PDF page counts. Representative assertions:
 
@@ -155,13 +155,13 @@ def test_discovery_excludes_unconfigured_sibling(tmp_path, write_pdf):
     assert len(records[0].sha256) == 64
 ```
 
-- [ ] **Step 2: Run tests and confirm failure**
+- [x] **Step 2: Run tests and confirm failure**
 
 Run: `uv run pytest tests/test_catalog.py -v`
 
 Expected: FAIL because catalog types and discovery functions do not exist.
 
-- [ ] **Step 3: Implement typed records and deterministic discovery**
+- [x] **Step 3: Implement typed records and deterministic discovery**
 
 Define frozen dataclasses `SourceRoot`, `DocumentRecord`, `PageRecord`, and `SearchResult`. Use `hashlib.file_digest` for SHA-256 and PyMuPDF for page count. Document ID is `sha256[:16]`; classification uses explicit filename regex rules from `config/documents.toml`, and an unmatched file is reported as an error rather than guessed.
 
@@ -170,22 +170,22 @@ The committed configuration contains exactly these source roots:
 ```toml
 [[sources]]
 chip = "esp32-c3"
-path = "../docs/ESP32-C3"
+path = "docs/ESP32-C3"
 
 [[sources]]
 chip = "esp32-s3"
-path = "../docs/ESP32-S3"
+path = "docs/ESP32-S3"
 ```
 
-Resolve relative paths from the repository root; allow an explicit `ESPDOCS_SOURCE_BASE` environment override for clones with a different directory layout. Rules classify `technical_reference_manual`, `datasheet`, `module_datasheet`, and `hardware_design_guidelines`. Store the resolved source path in local manifests and sort records by `(chip, source_path.name.casefold())`.
+Resolve logical paths from the nearest ancestor containing both configured source directories; allow an explicit `ESPDOCS_SOURCE_BASE` environment override for clones with a different directory layout. Rules classify `technical_reference_manual`, `datasheet`, `module_datasheet`, and `hardware_design_guidelines`. Store the resolved source path in local manifests and sort records by `(chip, source_path.name.casefold())`.
 
-- [ ] **Step 4: Run focused and full tests**
+- [x] **Step 4: Run focused and full tests**
 
 Run: `uv run pytest tests/test_catalog.py -v && uv run pytest -q`
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit catalog support**
+- [x] **Step 5: Commit catalog support**
 
 ```powershell
 git add config/documents.toml src/espdocs/models.py src/espdocs/catalog.py tests/test_catalog.py

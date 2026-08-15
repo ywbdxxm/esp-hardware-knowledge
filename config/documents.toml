@@ -1,0 +1,7 @@
+[[sources]]
+chip = "esp32-c3"
+path = "docs/ESP32-C3"
+
+[[sources]]
+chip = "esp32-s3"
+path = "docs/ESP32-S3"
