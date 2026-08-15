@@ -248,7 +248,7 @@ git commit -m "feat: add page-traceable Docling conversion"
 - Create: `src/espdocs/ingest.py`
 - Create: `tests/test_ingest.py`
 
-- [ ] **Step 1: Write failing ingestion tests**
+- [x] **Step 1: Write failing ingestion tests**
 
 Cover unchanged-hash skipping, stage-directory cleanup, failed conversion preserving the active corpus, manifest persistence, empty-page warnings, replacement only after validation, and UTF-8 Markdown round trips.
 
@@ -262,25 +262,25 @@ def test_failed_ingest_preserves_active_document(tmp_path, failing_parser):
     assert (active / "marker.txt").read_text() == "known-good"
 ```
 
-- [ ] **Step 2: Run tests and confirm failure**
+- [x] **Step 2: Run tests and confirm failure**
 
 Run: `uv run pytest tests/test_ingest.py -v`
 
 Expected: FAIL because the ingestion coordinator is missing.
 
-- [ ] **Step 3: Implement staging, manifest and quality checks**
+- [x] **Step 3: Implement staging, manifest and quality checks**
 
 Write each conversion below `corpus/.staging/<document-id>-<uuid>`. Persist `manifest.json` with document metadata, parser versions, timestamp, page list, warnings, and validation status. Extract a declared document version/date from the converted title and front-matter pages using reviewed regexes; store `unknown` rather than inferring when no unambiguous declaration is present, and force source checks for unknown versions. Reject promotion when page file count differs from PDF page count, every page is empty, Markdown cannot decode as UTF-8, or an image reference escapes the document directory.
 
 Promote with `Path.replace` only after validation. Move an older active directory to a local backup, restore it if promotion fails, and remove the backup after success. Do not delete an active corpus solely because a source file vanished; mark it missing in the next manifest.
 
-- [ ] **Step 4: Run ingestion tests and complete suite**
+- [x] **Step 4: Run ingestion tests and complete suite**
 
 Run: `uv run pytest tests/test_ingest.py -v && uv run pytest -q`
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit transactional ingestion**
+- [x] **Step 5: Commit transactional ingestion**
 
 ```powershell
 git add src/espdocs/ingest.py tests/test_ingest.py
