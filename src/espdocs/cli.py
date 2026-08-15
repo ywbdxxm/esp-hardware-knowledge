@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 from dataclasses import asdict, is_dataclass
 from importlib.metadata import version as package_version
@@ -13,6 +14,7 @@ import typer
 
 from espdocs.catalog import discover_documents, load_source_roots
 from espdocs.config import AppPaths
+from espdocs.gpu import gpu_status
 from espdocs.index import build_index, supports_trigram
 from espdocs.ingest import ingest_document
 from espdocs.retrieval import RetrievalError, SearchService, get_indexed_page
@@ -35,7 +37,7 @@ def _jsonable(value: Any) -> Any:
 
 def _emit(payload: dict[str, Any], json_output: bool) -> None:
     if json_output:
-        typer.echo(json.dumps(_jsonable(payload), ensure_ascii=False))
+        typer.echo(json.dumps(_jsonable(payload), ensure_ascii=True))
     else:
         typer.echo(json.dumps(_jsonable(payload), ensure_ascii=False, indent=2))
 
@@ -189,6 +191,17 @@ def doctor(
             trigram = supports_trigram(connection)
         finally:
             connection.close()
+        gpu = gpu_status()
+        requested_device = os.environ.get("ESPDOCS_DEVICE", "cuda").casefold()
+        if requested_device == "cpu":
+            selected_device = "cpu"
+            accelerator_healthy = True
+        elif requested_device in {"cuda", "auto"} and gpu.ready:
+            selected_device = "cuda"
+            accelerator_healthy = True
+        else:
+            selected_device = "unavailable"
+            accelerator_healthy = False
         components = {
             "python": __import__("platform").python_version(),
             "docling": package_version("docling"),
@@ -199,8 +212,21 @@ def doctor(
         }
         payload = {
             "schema_version": 1,
-            "healthy": trigram and all(root.path.is_dir() for root in roots),
+            "healthy": (
+                trigram and accelerator_healthy and all(root.path.is_dir() for root in roots)
+            ),
             "components": components,
+            "gpu": {
+                "requested_device": requested_device,
+                "selected_device": selected_device,
+                "ready": gpu.ready,
+                "torch_cuda": gpu.torch_cuda,
+                "torch_cuda_version": gpu.torch_cuda_version,
+                "onnx_cuda": gpu.onnx_cuda,
+                "onnx_providers": gpu.onnx_providers,
+                "device_name": gpu.device_name,
+                "memory_mib": gpu.memory_mib,
+            },
             "sources": {
                 "configured": len(roots),
                 "roots": [root.path for root in roots],

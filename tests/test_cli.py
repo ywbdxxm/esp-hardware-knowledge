@@ -5,8 +5,10 @@ import pymupdf
 import pytest
 from typer.testing import CliRunner
 
+import espdocs.cli as cli_module
 from espdocs.catalog import sha256_file
 from espdocs.cli import app
+from espdocs.gpu import GpuStatus
 from espdocs.index import build_index
 
 
@@ -44,7 +46,7 @@ def cli_runtime(tmp_path: Path, monkeypatch) -> dict[str, Path]:
     corpus_doc = data / "corpus" / "doc-c3"
     page_path = corpus_doc / "pages" / "0017.md"
     page_path.parent.mkdir(parents=True)
-    page_path.write_text("UART register overview", encoding="utf-8")
+    page_path.write_text("UART 控制器 overview", encoding="utf-8")
     manifest = {
         "schema_version": 1,
         "document": {
@@ -104,7 +106,7 @@ def test_show_json_returns_full_indexed_page(cli_runtime: dict[str, Path]) -> No
     payload = json.loads(result.stdout)
 
     assert result.exit_code == 0
-    assert payload["page"]["text"] == "UART register overview"
+    assert payload["page"]["text"] == "UART 控制器 overview"
     assert payload["page"]["pdf_page"] == 1
 
 
@@ -126,6 +128,67 @@ def test_doctor_reports_required_components(cli_runtime: dict[str, Path]) -> Non
     assert payload["components"]["fts5_trigram"] is True
     assert payload["components"]["docling"] == "2.120.1"
     assert payload["sources"]["configured"] == 2
+
+
+def test_doctor_reports_cuda_readiness(cli_runtime: dict[str, Path], monkeypatch) -> None:
+    monkeypatch.delenv("ESPDOCS_DEVICE", raising=False)
+    monkeypatch.setattr(
+        cli_module,
+        "gpu_status",
+        lambda: GpuStatus(
+            ready=True,
+            torch_cuda=True,
+            torch_cuda_version="13.0",
+            onnx_cuda=True,
+            onnx_providers=("CUDAExecutionProvider", "CPUExecutionProvider"),
+            device_name="NVIDIA GeForce RTX 5070 Ti",
+            memory_mib=16303,
+        ),
+    )
+
+    result = CliRunner().invoke(app, ["doctor", "--json"])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 0
+    assert payload["healthy"] is True
+    assert payload["gpu"] == {
+        "requested_device": "cuda",
+        "selected_device": "cuda",
+        "ready": True,
+        "torch_cuda": True,
+        "torch_cuda_version": "13.0",
+        "onnx_cuda": True,
+        "onnx_providers": ["CUDAExecutionProvider", "CPUExecutionProvider"],
+        "device_name": "NVIDIA GeForce RTX 5070 Ti",
+        "memory_mib": 16303,
+    }
+
+
+def test_doctor_is_unhealthy_when_default_cuda_is_unavailable(
+    cli_runtime: dict[str, Path], monkeypatch
+) -> None:
+    monkeypatch.delenv("ESPDOCS_DEVICE", raising=False)
+    monkeypatch.setattr(
+        cli_module,
+        "gpu_status",
+        lambda: GpuStatus(
+            ready=False,
+            torch_cuda=True,
+            torch_cuda_version="13.0",
+            onnx_cuda=False,
+            onnx_providers=("CPUExecutionProvider",),
+            device_name="NVIDIA GeForce RTX 5070 Ti",
+            memory_mib=16303,
+        ),
+    )
+
+    result = CliRunner().invoke(app, ["doctor", "--json"])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 0
+    assert payload["healthy"] is False
+    assert payload["gpu"]["requested_device"] == "cuda"
+    assert payload["gpu"]["selected_device"] == "unavailable"
 
 
 def test_ingest_dry_run_does_not_convert(cli_runtime: dict[str, Path]) -> None:
@@ -151,3 +214,10 @@ def test_missing_index_uses_runtime_exit_code(cli_runtime: dict[str, Path]) -> N
 
     assert result.exit_code == 3
     assert json.loads(result.stdout)["error"]["type"] == "IndexUnavailable"
+
+
+def test_json_output_is_ascii_safe_and_decodes_to_chinese(cli_runtime: dict[str, Path]) -> None:
+    result = CliRunner().invoke(app, ["show", "1", "--json"])
+
+    assert result.stdout.isascii()
+    assert json.loads(result.stdout)["page"]["text"] == "UART 控制器 overview"
