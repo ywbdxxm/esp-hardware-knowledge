@@ -293,7 +293,7 @@ git commit -m "feat: add transactional corpus ingestion"
 - Create: `src/espdocs/index.py`
 - Create: `tests/test_index.py`
 
-- [ ] **Step 1: Write failing Chinese retrieval and atomic-index tests**
+- [x] **Step 1: Write failing Chinese retrieval and atomic-index tests**
 
 ```python
 def test_trigram_index_retrieves_chinese_substring(indexed_db):
@@ -308,13 +308,13 @@ def test_index_rejects_sqlite_without_trigram(monkeypatch):
         build_index([], Path("unused.sqlite3"))
 ```
 
-- [ ] **Step 2: Run tests and confirm failure**
+- [x] **Step 2: Run tests and confirm failure**
 
 Run: `uv run pytest tests/test_index.py -v`
 
 Expected: FAIL because the index module does not exist.
 
-- [ ] **Step 3: Implement schema and atomic database build**
+- [x] **Step 3: Implement schema and atomic database build**
 
 Create normalized `documents` and `pages` tables plus:
 
@@ -329,13 +329,13 @@ CREATE VIRTUAL TABLE pages_fts USING fts5(
 
 Store chip, document type, title, version, source path, SHA-256, page number, Markdown path, content type, warnings, and verification state in ordinary columns. Check FTS5 trigram support in an in-memory database before building. Build into `espdocs.sqlite3.tmp`, run `PRAGMA integrity_check` and an FTS smoke query, close connections, then use `Path.replace` to publish the active database.
 
-- [ ] **Step 4: Run tests and inspect SQLite integrity**
+- [x] **Step 4: Run tests and inspect SQLite integrity**
 
 Run: `uv run pytest tests/test_index.py -v && uv run pytest -q`
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit the index**
+- [x] **Step 5: Commit the index**
 
 ```powershell
 git add src/espdocs/index.py tests/test_index.py
