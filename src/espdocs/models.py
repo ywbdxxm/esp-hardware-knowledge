@@ -65,3 +65,14 @@ class SearchResult:
     evidence_grade: str
     requires_source_check: bool
     source_check_reasons: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class SourceView:
+    source_path: Path
+    pdf_page: int
+    render_path: Path
+    verified_sha256: str
+    evidence_grade: str
+    previous_page: int | None
+    next_page: int | None

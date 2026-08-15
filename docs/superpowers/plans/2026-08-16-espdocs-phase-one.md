@@ -405,7 +405,7 @@ git commit -m "feat: add filtered retrieval and source-check policy"
 - Create: `src/espdocs/source.py`
 - Create: `tests/test_source.py`
 
-- [ ] **Step 1: Write failing source-page tests**
+- [x] **Step 1: Write failing source-page tests**
 
 Cover one-based page validation, SHA-256 mismatch, missing source file, deterministic render names, adjacent-page suggestions, and successful PNG rendering.
 
@@ -418,23 +418,23 @@ def test_source_refuses_changed_pdf(tmp_path, sample_pdf):
         render_source_page(sample_pdf, expected, page_no=1, output_dir=tmp_path)
 ```
 
-- [ ] **Step 2: Run source tests and confirm failure**
+- [x] **Step 2: Run source tests and confirm failure**
 
 Run: `uv run pytest tests/test_source.py -v`
 
 Expected: FAIL because source verification does not exist.
 
-- [ ] **Step 3: Implement hash-verified rendering**
+- [x] **Step 3: Implement hash-verified rendering**
 
 Recompute SHA-256 before opening the source. Reject page 0 and pages beyond `document.page_count`. Render with PyMuPDF at a fixed 200 DPI to `<sha256-prefix>-p<page-no>-200dpi.png`; write via a temporary file and replace atomically. Return a `SourceView` containing the original absolute path, one-based page, render path, verified hash, evidence grade A, and valid previous/next page numbers.
 
-- [ ] **Step 4: Run source and full tests**
+- [x] **Step 4: Run source and full tests**
 
 Run: `uv run pytest tests/test_source.py -v && uv run pytest -q`
 
 Expected: all tests PASS and the test PNG has non-zero dimensions.
 
-- [ ] **Step 5: Commit source rendering**
+- [x] **Step 5: Commit source rendering**
 
 ```powershell
 git add src/espdocs/source.py tests/test_source.py
