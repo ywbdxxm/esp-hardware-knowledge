@@ -46,7 +46,7 @@ tests/                              Unit, integration and CLI contract tests
 - Create: `src/espdocs/config.py`
 - Create: `tests/test_config.py`
 
-- [ ] **Step 1: Write the failing runtime-path test**
+- [x] **Step 1: Write the failing runtime-path test**
 
 ```python
 from pathlib import Path
@@ -65,13 +65,13 @@ def test_runtime_data_stays_outside_repository(tmp_path: Path) -> None:
     assert repo not in paths.data_root.parents
 ```
 
-- [ ] **Step 2: Run the focused test and verify the import fails**
+- [x] **Step 2: Run the focused test and verify the import fails**
 
 Run: `uv run pytest tests/test_config.py -v`
 
 Expected: FAIL because `espdocs.config` does not exist.
 
-- [ ] **Step 3: Add project metadata and minimal path implementation**
+- [x] **Step 3: Add project metadata and minimal path implementation**
 
 Use Python 3.13 in `.python-version`. Define the package and tools in `pyproject.toml`:
 
@@ -110,13 +110,13 @@ target-version = "py313"
 
 Ignore `.venv/`, Python caches, coverage files, `*.sqlite3`, `corpus/`, `renders/`, `cache/`, and `logs/`. Implement immutable `AppPaths` with `from_roots`, `discover`, and `ensure_runtime_dirs`; `discover` uses `%LOCALAPPDATA%` and fails with a clear message if it is unavailable.
 
-- [ ] **Step 4: Lock dependencies and run the test**
+- [x] **Step 4: Lock dependencies and run the test**
 
 Run: `uv lock && uv sync --dev && uv run pytest tests/test_config.py -v`
 
 Expected: PASS, and `uv.lock` is created.
 
-- [ ] **Step 5: Run formatting and commit**
+- [x] **Step 5: Run formatting and commit**
 
 Run: `uv run ruff check . && uv run ruff format --check .`
 
