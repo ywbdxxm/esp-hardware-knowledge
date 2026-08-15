@@ -198,7 +198,7 @@ git commit -m "feat: add deterministic ESP PDF catalog"
 - Create: `src/espdocs/parser.py`
 - Create: `tests/test_parser.py`
 
-- [ ] **Step 1: Write parser contract tests with a fake Docling document**
+- [x] **Step 1: Write parser contract tests with a fake Docling document**
 
 The tests must not run OCR. Use a fake object whose `save_as_markdown(..., page_no=N)` records calls. Verify one output file per physical page, one-based page numbers, referenced image mode, and failure if any expected page is absent.
 
@@ -212,19 +212,19 @@ def test_export_pages_preserves_physical_page_numbers(tmp_path, fake_conversion)
     assert fake_conversion.saved_page_numbers == [1, 2]
 ```
 
-- [ ] **Step 2: Run the focused parser tests and confirm failure**
+- [x] **Step 2: Run the focused parser tests and confirm failure**
 
 Run: `uv run pytest tests/test_parser.py -v`
 
 Expected: FAIL because `espdocs.parser` does not exist.
 
-- [ ] **Step 3: Build a pinned local Docling converter**
+- [x] **Step 3: Build a pinned local Docling converter**
 
 Construct `PdfPipelineOptions` with `RapidOcrOptions(mode=OcrMode.FULL_PAGE, lang=["chinese"], backend="onnxruntime")`, accurate table mode, picture and page image generation, no remote services, and four CPU threads. Register it through `PdfFormatOption` on `DocumentConverter`.
 
 Conversion must use `raises_on_error=True`. For each page call `save_as_markdown` with `page_no`, `ImageRefMode.REFERENCED`, and a page-specific artifact directory. Save Docling JSON once per document for diagnostics. Never concatenate pages before indexing.
 
-- [ ] **Step 4: Run parser tests and an explicit API smoke check**
+- [x] **Step 4: Run parser tests and an explicit API smoke check**
 
 Run:
 
@@ -235,7 +235,7 @@ uv run python -c "from espdocs.parser import build_converter; build_converter();
 
 Expected: tests PASS and output contains `converter-ok` without downloading a VLM.
 
-- [ ] **Step 5: Commit the parser adapter**
+- [x] **Step 5: Commit the parser adapter**
 
 ```powershell
 git add src/espdocs/parser.py tests/test_parser.py

@@ -24,3 +24,14 @@ class DocumentRecord:
     page_count: int
     size_bytes: int
     modified_ns: int
+
+
+@dataclass(frozen=True)
+class PageRecord:
+    document_id: str
+    page_no: int
+    markdown_path: Path
+    text: str
+    content_type: str
+    warnings: tuple[str, ...]
+    verified: bool
