@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from espdocs.markdown import normalize_local_image_references
 from espdocs.models import DocumentRecord, PageRecord
 from espdocs.parser import convert_document
 
@@ -34,7 +35,6 @@ _VERSION_PATTERN = re.compile(
     r"(?:版本|Version)\s*[:：]?\s*[vV]?\s*(\d+(?:\.\d+)+)",
     re.IGNORECASE,
 )
-_IMAGE_PATTERN = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
 
 
 def load_manifest(document_dir: Path) -> dict[str, Any]:
@@ -70,19 +70,14 @@ def _validate_pages(record: DocumentRecord, pages: list[PageRecord], stage: Path
     for page in pages:
         if not page.markdown_path.is_file():
             raise IngestError(f"Missing Markdown for PDF page {page.page_no}")
+        try:
+            normalize_local_image_references(page.markdown_path, stage_root)
+        except ValueError as error:
+            raise IngestError(f"{error} on page {page.page_no}") from error
         text = page.markdown_path.read_text(encoding="utf-8")
         if not text.strip():
             empty_pages += 1
             warnings.append(f"empty_page:{page.page_no}")
-        for reference in _IMAGE_PATTERN.findall(text):
-            clean_reference = reference.strip().strip("\"'").split(maxsplit=1)[0]
-            if clean_reference.startswith(("http://", "https://", "data:", "#")):
-                continue
-            target = (page.markdown_path.parent / clean_reference).resolve()
-            if not target.is_relative_to(stage_root):
-                raise IngestError(
-                    f"Image reference escapes document directory on page {page.page_no}: {reference}"
-                )
     if empty_pages == record.page_count:
         raise IngestError("Every exported page is empty")
     return warnings

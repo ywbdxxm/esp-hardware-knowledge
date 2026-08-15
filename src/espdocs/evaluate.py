@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from espdocs.config import AppPaths
+from espdocs.markdown import local_image_reference_errors
 from espdocs.retrieval import SearchService
 
 
@@ -168,6 +169,12 @@ def _corpus_health(corpus_dir: Path) -> tuple[int, int, list[str]]:
                 path = (document_dir / page["markdown_path"]).resolve()
                 if not path.is_relative_to(document_dir.resolve()) or not path.is_file():
                     errors.append(f"missing_page:{document_dir.name}:{page['pdf_page']}")
+                    continue
+                for image_error in local_image_reference_errors(path, document_dir):
+                    errors.append(
+                        f"{image_error.reason}_image:{document_dir.name}:"
+                        f"{page['pdf_page']}:{image_error.reference}"
+                    )
         except (OSError, KeyError, TypeError, json.JSONDecodeError) as error:
             errors.append(f"invalid_manifest:{document_dir.name}:{error}")
     return documents, pages, errors

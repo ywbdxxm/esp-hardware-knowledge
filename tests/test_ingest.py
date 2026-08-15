@@ -113,6 +113,40 @@ def test_image_reference_cannot_escape_document_directory(tmp_path: Path) -> Non
         ingest_document(record, parser, tmp_path / "corpus")
 
 
+def test_stage_image_reference_remains_valid_after_promotion(tmp_path: Path) -> None:
+    record = make_record(tmp_path, pages=1)
+    corpus = tmp_path / "corpus"
+
+    class ImageParser(FakeParser):
+        def __call__(self, current: DocumentRecord, output_dir: Path) -> list[PageRecord]:
+            image = output_dir / "assets" / "0001" / "diagram.png"
+            image.parent.mkdir(parents=True)
+            image.write_bytes(b"png")
+            markdown = output_dir / "pages" / "0001.md"
+            markdown.parent.mkdir(parents=True)
+            text = f"![diagram]({image})"
+            markdown.write_text(text, encoding="utf-8")
+            return [
+                PageRecord(
+                    document_id=current.document_id,
+                    page_no=1,
+                    markdown_path=markdown,
+                    text=text,
+                    content_type="picture",
+                    warnings=(),
+                    verified=False,
+                )
+            ]
+
+    result = ingest_document(record, ImageParser(), corpus)
+    promoted_markdown = result.active_dir / "pages" / "0001.md"
+    promoted_text = promoted_markdown.read_text(encoding="utf-8")
+    expected_image = result.active_dir / "assets" / "0001" / "diagram.png"
+
+    assert promoted_text == "![diagram](../assets/0001/diagram.png)"
+    assert expected_image.is_file()
+
+
 def test_unknown_version_is_explicit_and_warned(tmp_path: Path) -> None:
     record = make_record(tmp_path, pages=1)
 

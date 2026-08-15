@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from espdocs.evaluate import EvaluationError, GoldenCase, evaluate, load_cases
+from espdocs.evaluate import EvaluationError, GoldenCase, _corpus_health, evaluate, load_cases
 
 
 def make_cases(count: int = 20) -> list[GoldenCase]:
@@ -102,3 +102,24 @@ def test_load_cases_reads_page_range(tmp_path: Path) -> None:
     case = load_cases(path)[0]
 
     assert (case.page_min, case.page_max) == (10, 12)
+
+
+def test_corpus_health_reports_broken_local_image_reference(tmp_path: Path) -> None:
+    document = tmp_path / "corpus" / "abc123"
+    page = document / "pages" / "0001.md"
+    page.parent.mkdir(parents=True)
+    page.write_text("![missing](../assets/0001/missing.png)", encoding="utf-8")
+    (document / "manifest.json").write_text(
+        json.dumps(
+            {
+                "validation": {"passed": True},
+                "pages": [{"pdf_page": 1, "markdown_path": "pages/0001.md"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    documents, pages, errors = _corpus_health(tmp_path / "corpus")
+
+    assert (documents, pages) == (1, 1)
+    assert errors == ["missing_image:abc123:1:../assets/0001/missing.png"]
