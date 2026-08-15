@@ -501,7 +501,7 @@ git commit -m "feat: expose stable espdocs CLI"
 - Create: `src/espdocs/evaluate.py`
 - Create: `tests/test_evaluate.py`
 
-- [ ] **Step 1: Write failing evaluation tests**
+- [x] **Step 1: Write failing evaluation tests**
 
 Test top-five source recall calculation, chip isolation, source-check expectations, malformed evaluation records, empty sets, and a failing threshold exit status.
 
@@ -512,25 +512,25 @@ def test_evaluation_requires_95_percent_top_five_recall(fake_search):
     assert report.passed is True
 ```
 
-- [ ] **Step 2: Run evaluation tests and confirm failure**
+- [x] **Step 2: Run evaluation tests and confirm failure**
 
 Run: `uv run pytest tests/test_evaluate.py -v`
 
 Expected: FAIL because evaluation support is missing.
 
-- [ ] **Step 3: Implement evaluation format and runner**
+- [x] **Step 3: Implement evaluation format and runner**
 
 Each JSONL line contains `id`, `query`, `chip`, optional `document_type`, expected filename, accepted PDF page range, and expected `requires_source_check`. The evaluator queries at limit five, checks source/page matches and chip leakage, and emits per-case diagnostics plus aggregate top-five recall. It exits non-zero below 95% or on any unmarked C3/S3 mixing.
 
 Seed the file with verified location questions only after the pilot corpus exists. Do not store generated answers. Until 20 verified cases exist, report `insufficient_cases` and fail release verification rather than claiming the 95% metric.
 
-- [ ] **Step 4: Run evaluation tests**
+- [x] **Step 4: Run evaluation tests**
 
 Run: `uv run pytest tests/test_evaluate.py -v && uv run pytest -q`
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit evaluation tooling**
+- [x] **Step 5: Commit evaluation tooling**
 
 ```powershell
 git add evaluation/golden.jsonl src/espdocs/evaluate.py tests/test_evaluate.py
