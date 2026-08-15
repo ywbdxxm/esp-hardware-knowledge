@@ -121,3 +121,21 @@ def test_unknown_version_is_explicit_and_warned(tmp_path: Path) -> None:
 
     assert manifest["document"]["version"] == "unknown"
     assert "unknown_document_version" in manifest["warnings"]
+
+
+def test_ingest_reuses_hash_bound_staging_for_interrupted_run(tmp_path: Path) -> None:
+    record = make_record(tmp_path, pages=1)
+    corpus = tmp_path / "corpus"
+    expected_stage = corpus / ".staging" / f"{record.document_id}-{record.sha256[:16]}"
+    expected_stage.mkdir(parents=True)
+    (expected_stage / "resume.marker").write_text("completed batch", encoding="utf-8")
+
+    class ResumingParser(FakeParser):
+        def __call__(self, current: DocumentRecord, output_dir: Path) -> list[PageRecord]:
+            assert output_dir == expected_stage
+            assert (output_dir / "resume.marker").is_file()
+            return super().__call__(current, output_dir)
+
+    result = ingest_document(record, ResumingParser(page_texts=["版本：1.4"]), corpus)
+
+    assert result.status == "imported"

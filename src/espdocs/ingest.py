@@ -142,8 +142,8 @@ def ingest_document(
 
     staging_root = corpus_dir / ".staging"
     staging_root.mkdir(parents=True, exist_ok=True)
-    stage = staging_root / f"{record.document_id}-{uuid4().hex}"
-    stage.mkdir()
+    stage = staging_root / f"{record.document_id}-{record.sha256[:16]}"
+    stage.mkdir(exist_ok=True)
     active_parser = parser or _default_parser
     try:
         pages = active_parser(record, stage)
