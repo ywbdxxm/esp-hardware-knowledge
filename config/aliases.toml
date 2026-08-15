@@ -1,0 +1,17 @@
+[[groups]]
+terms = ["UART", "通用异步收发器", "通用异步串行收发器"]
+
+[[groups]]
+terms = ["GPIO", "通用输入输出"]
+
+[[groups]]
+terms = ["GDMA", "通用 DMA", "通用直接存储器访问"]
+
+[[groups]]
+terms = ["eFuse", "电子熔丝"]
+
+[[groups]]
+terms = ["ESP32-C3", "ESP32C3", "C3"]
+
+[[groups]]
+terms = ["ESP32-S3", "ESP32S3", "S3"]

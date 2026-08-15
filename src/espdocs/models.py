@@ -35,3 +35,33 @@ class PageRecord:
     content_type: str
     warnings: tuple[str, ...]
     verified: bool
+
+
+@dataclass(frozen=True)
+class EvidenceDecision:
+    grade: str
+    requires_source_check: bool
+    reasons: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class SearchResult:
+    page_id: int
+    document_id: str
+    chip: str
+    document_type: str
+    title: str
+    version: str
+    source_path: Path
+    sha256: str
+    pdf_page: int
+    markdown_path: Path
+    snippet: str
+    content_type: str
+    warnings: tuple[str, ...]
+    verified: bool
+    score: float
+    matched_terms: tuple[str, ...]
+    evidence_grade: str
+    requires_source_check: bool
+    source_check_reasons: tuple[str, ...]

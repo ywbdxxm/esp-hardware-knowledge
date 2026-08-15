@@ -351,7 +351,7 @@ git commit -m "feat: add Chinese FTS5 trigram index"
 - Create: `tests/test_retrieval.py`
 - Create: `tests/test_evidence.py`
 
-- [ ] **Step 1: Write failing retrieval and safety-policy tests**
+- [x] **Step 1: Write failing retrieval and safety-policy tests**
 
 Cover exact register terms, Chinese aliases, chip and document-type filters, invalid filters, result limits, stable ordering, and mandatory source checks.
 
@@ -372,13 +372,13 @@ def test_chip_filter_never_silently_mixes_s3(search_service):
     assert {result.chip for result in results} == {"esp32-c3"}
 ```
 
-- [ ] **Step 2: Run focused tests and confirm failure**
+- [x] **Step 2: Run focused tests and confirm failure**
 
 Run: `uv run pytest tests/test_retrieval.py tests/test_evidence.py -v`
 
 Expected: FAIL because retrieval and evidence modules are absent.
 
-- [ ] **Step 3: Implement deterministic retrieval and fail-closed evidence grading**
+- [x] **Step 3: Implement deterministic retrieval and fail-closed evidence grading**
 
 Normalize whitespace and Unicode width without altering register punctuation. Load only reviewed aliases from TOML; initially include `UART/通用异步收发器`, `GPIO/通用输入输出`, `GDMA/通用 DMA`, `eFuse/电子熔丝`, and common C3/S3 spellings.
 
@@ -386,13 +386,13 @@ Escape all user terms before constructing FTS MATCH expressions and use SQL para
 
 Evidence policy returns grade C and `requires_source_check=true` for register addresses, bit fields, reset values, electrical quantities, timing, pins, boot, eFuse, security, flashing, tables, pictures, OCR warnings, version conflicts, or inferred answers. A result can become grade B only when page mapping and corpus checks pass and no mandatory-source rule applies. Grade A is assigned only after `source` verifies the hash and provides the original page.
 
-- [ ] **Step 4: Run policy and retrieval tests**
+- [x] **Step 4: Run policy and retrieval tests**
 
 Run: `uv run pytest tests/test_retrieval.py tests/test_evidence.py -v && uv run pytest -q`
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit retrieval and evidence policy**
+- [x] **Step 5: Commit retrieval and evidence policy**
 
 ```powershell
 git add config/aliases.toml src/espdocs/evidence.py src/espdocs/retrieval.py tests/test_retrieval.py tests/test_evidence.py
