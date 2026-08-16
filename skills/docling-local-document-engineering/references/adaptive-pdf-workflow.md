@@ -38,13 +38,17 @@ Use the local CLI and current `--help`; do not assume options from another Docli
 
 ```powershell
 $output = Join-Path $env:TEMP "docling-task-output"
+$device = "cuda" # This machine after verification; choose CPU explicitly when required.
 New-Item -ItemType Directory -Force -Path $output | Out-Null
 docling convert $source --to md --to json --image-export-mode referenced `
-  --output $output --abort-on-error --device cuda
+  --output $output --abort-on-error --device $device
 ```
 
 For a true scanned document, add `--ocr-mode full_page`. For selected evidence, add a one-based
 `--page-range`, such as `12-18`. Do not force full-page OCR over trustworthy native text.
+Confirm the execution device before conversion. This machine uses `cuda`; on another machine,
+choose `cpu` deliberately when no supported accelerator is available and report that choice for a
+large conversion.
 
 Markdown is convenient for reading; JSON carries structural and provenance detail. Check that each
 candidate statement maps to the expected physical page. A generated sequence number or chunk ID is

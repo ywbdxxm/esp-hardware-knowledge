@@ -72,6 +72,7 @@ def test_docling_skill_routes_pdf_research_adaptively() -> None:
     assert "adjacent" in workflow.casefold()
     assert "original PDF" in workflow
     assert "empty output" in workflow.casefold()
+    assert "--device $device" in workflow
     assert "pdf:pdf" in skill
 
 
