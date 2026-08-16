@@ -350,7 +350,7 @@ git add docs/superpowers/plans/2026-08-16-idf-docs-and-docling-skills.md
 git commit -m "docs: complete IDF and Docling skill rollout"
 ```
 
-- [ ] **Step 5: Merge to main and push**
+- [x] **Step 5: Merge to main and push**
 
 From the primary checkout, fast-forward `main` to the feature branch after confirming the primary
 worktree is clean, then run:
