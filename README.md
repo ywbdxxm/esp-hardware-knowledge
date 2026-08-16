@@ -23,7 +23,7 @@
 前提是 Windows 11、uv 和支持当前 CUDA 运行时的 NVIDIA 驱动已经安装。项目不使用系统 Python，也不复用 ESP-IDF 的 Python 环境。
 
 ```powershell
-cd C:\Users\ljm75\Desktop\AI-HRADWARE\esp-hardware-knowledge
+cd $env:USERPROFILE\Desktop\AI-HRADWARE\esp-hardware-knowledge
 uv python install 3.13
 uv sync --dev
 uv run espdocs doctor --json
@@ -43,8 +43,8 @@ uv run espdocs doctor --json
 允许的来源只在 `config/documents.toml` 中声明：
 
 ```text
-C:\Users\ljm75\Desktop\AI-HRADWARE\docs\ESP32-C3
-C:\Users\ljm75\Desktop\AI-HRADWARE\docs\ESP32-S3
+%USERPROFILE%\Desktop\AI-HRADWARE\docs\ESP32-C3
+%USERPROFILE%\Desktop\AI-HRADWARE\docs\ESP32-S3
 ```
 
 发现逻辑只递归扫描这两个目录，未能按已审核文件名规则分类的 PDF 会报错，不会猜测类型。克隆到其他目录时，可把包含 `docs\ESP32-C3` 和 `docs\ESP32-S3` 的目录显式指定为来源基准：
@@ -115,7 +115,7 @@ uv run espdocs verify --json
 运行数据不进入 Git：
 
 ```text
-%LOCALAPPDATA%\esp-hardware-knowledge\
+%USERPROFILE%\Desktop\AI-HRADWARE\docs\esp-hardware-knowledge-data\
   corpus\                 分页 Markdown、图片、manifest 和 Docling 诊断数据
   index\espdocs.sqlite3   当前原子发布的 FTS5 索引
   renders\                哈希核验后的原 PDF 页面渲染
@@ -124,9 +124,38 @@ uv run espdocs verify --json
   backups\                人工维护操作的可恢复备份
 ```
 
+数据位置按以下顺序解析：用户或进程级 `ESPDOCS_DATA_ROOT`、同时包含 C3/S3 来源的
+`docs\esp-hardware-knowledge-data`、最后才是兼容旧安装的
+`%LOCALAPPDATA%\esp-hardware-knowledge`。本机使用显式用户级配置：
+
+```powershell
+[Environment]::SetEnvironmentVariable(
+    "ESPDOCS_DATA_ROOT",
+    "$env:USERPROFILE\Desktop\AI-HRADWARE\docs\esp-hardware-knowledge-data",
+    "User"
+)
+```
+
+设置后，新启动的 PowerShell、Codex Desktop 和 Codex CLI 会读取该值；当前已运行的进程
+需要重启或临时设置同名 `$env:` 变量。
+
 2026-08-16 的旧图片路径迁移备份位于 `backups\markdown-pre-image-fix-20260816-052940`。确认后续多次 `verify` 均通过后可手工归档或删除；它不参与索引。
 
 Git 只跟踪代码、配置、测试、黄金定位案例和文档。PDF、语料、模型缓存、渲染图片和 SQLite 数据库均留在本机。
+
+## Codex 集成
+
+仓库中的 `skills/esp32-ai-hardware-engineering` 和 `codex/AGENTS.md` 是可版本化的
+Codex 配置源。本机部署位置分别是：
+
+```text
+%USERPROFILE%\.codex\skills\esp32-ai-hardware-engineering\
+%USERPROFILE%\.codex\AGENTS.md
+```
+
+全局 `AGENTS.md` 要求 Codex 遇到 ESP32/ESP-IDF 的代码、资料查询、硬件参数、编译、
+烧录或调试任务时先加载该 Skill。涉及本地 PDF 时，Skill 会先使用 `espdocs` 定位，再按
+证据规则回到原 PDF。当前仓库不包含 Claude Code、OpenCode 或 Hermes 适配。
 
 ## JSON 与错误处理
 

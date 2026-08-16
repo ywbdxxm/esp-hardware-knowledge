@@ -1,0 +1,7 @@
+interface:
+  display_name: "ESP32 AI Hardware Engineering"
+  short_description: "ESP32 firmware, hardware, and source-grounded validation"
+  default_prompt: "Use $esp32-ai-hardware-engineering to research, implement, or validate this ESP32 task."
+
+policy:
+  allow_implicit_invocation: true

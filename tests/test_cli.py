@@ -77,6 +77,7 @@ def cli_runtime(tmp_path: Path, monkeypatch) -> dict[str, Path]:
     database = data / "index" / "espdocs.sqlite3"
     build_index(data / "corpus", database)
     monkeypatch.setenv("LOCALAPPDATA", str(local))
+    monkeypatch.setenv("ESPDOCS_DATA_ROOT", str(data))
     monkeypatch.setenv("ESPDOCS_REPO_ROOT", str(repo))
     monkeypatch.setenv("ESPDOCS_SOURCE_BASE", str(hardware))
     return {"repo": repo, "source": source, "database": database, "data": data}

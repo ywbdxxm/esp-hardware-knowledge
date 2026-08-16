@@ -27,6 +27,33 @@ def test_discover_uses_local_app_data(monkeypatch, tmp_path: Path) -> None:
     assert paths.data_root == local.resolve() / "esp-hardware-knowledge"
 
 
+def test_discover_prefers_explicit_data_root(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    data = tmp_path / "docs" / "esp-hardware-knowledge-data"
+    monkeypatch.delenv("LOCALAPPDATA", raising=False)
+    monkeypatch.setenv("ESPDOCS_REPO_ROOT", str(repo))
+    monkeypatch.setenv("ESPDOCS_DATA_ROOT", str(data))
+
+    paths = AppPaths.discover()
+
+    assert paths.data_root == data.resolve()
+
+
+def test_discover_uses_source_library_data_root(monkeypatch, tmp_path: Path) -> None:
+    local = tmp_path / "LocalAppData"
+    project = tmp_path / "AI-HRADWARE"
+    repo = project / "esp-hardware-knowledge" / ".worktrees" / "feature"
+    (project / "docs" / "ESP32-C3").mkdir(parents=True)
+    (project / "docs" / "ESP32-S3").mkdir(parents=True)
+    monkeypatch.setenv("LOCALAPPDATA", str(local))
+    monkeypatch.setenv("ESPDOCS_REPO_ROOT", str(repo))
+    monkeypatch.delenv("ESPDOCS_DATA_ROOT", raising=False)
+
+    paths = AppPaths.discover()
+
+    assert paths.data_root == (project / "docs" / "esp-hardware-knowledge-data").resolve()
+
+
 def test_ensure_runtime_dirs_creates_only_runtime_tree(tmp_path: Path) -> None:
     paths = AppPaths.from_roots(
         repo_root=tmp_path / "repo",
