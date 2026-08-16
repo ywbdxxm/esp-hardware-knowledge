@@ -2,6 +2,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL_ROOT = REPO_ROOT / "skills" / "esp32-ai-hardware-engineering"
+DOCLING_SKILL_ROOT = REPO_ROOT / "skills" / "docling-local-document-engineering"
 
 
 def test_codex_agents_requires_esp32_skill_for_code_and_documentation() -> None:
@@ -53,3 +54,38 @@ def test_esp32_skill_uses_version_matched_local_idf_documentation() -> None:
     assert "version mismatch" in reference.casefold()
     assert "component header" in reference.casefold()
     assert "original pdf" in reference.casefold()
+
+
+def test_docling_skill_routes_pdf_research_adaptively() -> None:
+    skill = (DOCLING_SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+    workflow = (
+        DOCLING_SKILL_ROOT / "references" / "adaptive-pdf-workflow.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Use when" in skill
+    assert "native text" in workflow.casefold()
+    assert "scanned" in workflow.casefold()
+    assert "docling convert" in workflow
+    assert "full OCR" in workflow
+    assert "physical page" in workflow.casefold()
+    assert "SHA-256" in workflow
+    assert "adjacent" in workflow.casefold()
+    assert "original PDF" in workflow
+    assert "empty output" in workflow.casefold()
+    assert "pdf:pdf" in skill
+
+
+def test_docling_skill_documents_reusable_corpus_guards() -> None:
+    reference = (
+        DOCLING_SKILL_ROOT / "references" / "reusable-corpus.md"
+    ).read_text(encoding="utf-8")
+
+    for term in ("resumable", "staging", "atomic", "SQLite", "source hash", "espdocs"):
+        assert term.casefold() in reference.casefold()
+
+
+def test_docling_skill_allows_implicit_invocation() -> None:
+    metadata = (DOCLING_SKILL_ROOT / "agents" / "openai.yaml").read_text(encoding="utf-8")
+
+    assert 'default_prompt: "Use $docling-local-document-engineering' in metadata
+    assert "allow_implicit_invocation: true" in metadata

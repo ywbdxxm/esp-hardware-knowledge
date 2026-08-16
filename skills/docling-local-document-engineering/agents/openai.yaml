@@ -1,0 +1,7 @@
+interface:
+  display_name: "Docling Local Document Engineering"
+  short_description: "Adaptive local PDF extraction and traceable research"
+  default_prompt: "Use $docling-local-document-engineering to analyze this PDF with traceable original-page evidence."
+
+policy:
+  allow_implicit_invocation: true

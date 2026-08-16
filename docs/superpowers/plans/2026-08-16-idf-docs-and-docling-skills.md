@@ -107,7 +107,7 @@ git commit -m "feat: ground ESP32 work in local IDF docs"
 - Create: `skills/docling-local-document-engineering/references/reusable-corpus.md`
 - Create: `skills/docling-local-document-engineering/agents/openai.yaml`
 
-- [ ] **Step 1: Write failing metadata and workflow tests**
+- [x] **Step 1: Write failing metadata and workflow tests**
 
 Define `DOCLING_SKILL_ROOT` and tests that assert:
 
@@ -149,7 +149,7 @@ def test_docling_skill_allows_implicit_invocation() -> None:
     assert "allow_implicit_invocation: true" in metadata
 ```
 
-- [ ] **Step 2: Run the focused tests and verify RED**
+- [x] **Step 2: Run the focused tests and verify RED**
 
 Run:
 
@@ -159,7 +159,7 @@ uv run pytest tests/test_codex_assets.py -v
 
 Expected: FAIL because the Docling Skill directory does not exist.
 
-- [ ] **Step 3: Initialize the Skill using the Codex generator**
+- [x] **Step 3: Initialize the Skill using the Codex generator**
 
 Run:
 
@@ -169,7 +169,7 @@ uv run python "$env:USERPROFILE\.codex\skills\.system\skill-creator\scripts\init
 
 Expected: the Skill, reference directory, and `agents/openai.yaml` are created.
 
-- [ ] **Step 4: Replace generated placeholders with the minimal Skill**
+- [x] **Step 4: Replace generated placeholders with the minimal Skill**
 
 Use this trigger-only frontmatter description:
 
@@ -189,7 +189,7 @@ use temporary task-local outputs for one-off work, and require source-page fallb
 evidence. The corpus reference must reuse the proven design principles without making unrelated PDFs
 depend on ESP32-specific document types or commands.
 
-- [ ] **Step 5: Run tests and validator and verify GREEN**
+- [x] **Step 5: Run tests and validator and verify GREEN**
 
 Run:
 
@@ -200,7 +200,7 @@ uv run python "$env:USERPROFILE\.codex\skills\.system\skill-creator\scripts\quic
 
 Expected: all asset tests pass and validator prints `Skill is valid!`.
 
-- [ ] **Step 6: Commit Task 2**
+- [x] **Step 6: Commit Task 2**
 
 ```powershell
 git add tests/test_codex_assets.py skills/docling-local-document-engineering
