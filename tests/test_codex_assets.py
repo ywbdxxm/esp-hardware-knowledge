@@ -89,3 +89,31 @@ def test_docling_skill_allows_implicit_invocation() -> None:
 
     assert 'default_prompt: "Use $docling-local-document-engineering' in metadata
     assert "allow_implicit_invocation: true" in metadata
+
+
+def test_codex_agents_routes_pdf_research_without_owning_pdf_authoring() -> None:
+    text = (REPO_ROOT / "codex" / "AGENTS.md").read_text(encoding="utf-8")
+
+    assert "docling-local-document-engineering" in text
+    assert "PDF reading" in text
+    assert "adaptive" in text.casefold()
+    assert "pdf:pdf" in text
+    assert "forms" in text.casefold()
+
+
+def test_portable_codex_installer_manages_both_skills() -> None:
+    text = (REPO_ROOT / "scripts" / "install-codex-assets.ps1").read_text(encoding="utf-8")
+
+    assert "CodexHome" in text
+    assert "esp32-ai-hardware-engineering" in text
+    assert "docling-local-document-engineering" in text
+    assert "AGENTS.md" in text
+
+
+def test_readme_documents_cross_machine_codex_setup() -> None:
+    text = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "install-codex-assets.ps1" in text
+    assert "uv tool install docling" in text
+    assert "IDF_PATH" in text
+    assert "docling-local-document-engineering" in text

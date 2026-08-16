@@ -145,17 +145,44 @@ Git 只跟踪代码、配置、测试、黄金定位案例和文档。PDF、语�
 
 ## Codex 集成
 
-仓库中的 `skills/esp32-ai-hardware-engineering` 和 `codex/AGENTS.md` 是可版本化的
-Codex 配置源。本机部署位置分别是：
+仓库中的 `codex/AGENTS.md`、`skills/esp32-ai-hardware-engineering` 和
+`skills/docling-local-document-engineering` 是可版本化的 Codex 配置源。本机部署位置分别是：
 
 ```text
 %USERPROFILE%\.codex\skills\esp32-ai-hardware-engineering\
+%USERPROFILE%\.codex\skills\docling-local-document-engineering\
 %USERPROFILE%\.codex\AGENTS.md
 ```
 
 全局 `AGENTS.md` 要求 Codex 遇到 ESP32/ESP-IDF 的代码、资料查询、硬件参数、编译、
 烧录或调试任务时先加载该 Skill。涉及本地 PDF 时，Skill 会先使用 `espdocs` 定位，再按
-证据规则回到原 PDF。当前仓库不包含 Claude Code、OpenCode 或 Hermes 适配。
+证据规则回到原 PDF。ESP-IDF API、Kconfig、构建、迁移和示例优先使用项目同版本的本地
+ESP-IDF 文档与源码：先解析项目确认的 IDF 根目录，再检查 `$env:IDF_PATH`，最后才把
+`C:\esp\v6.0.2\esp-idf` 作为 v6.0.2 的本机回退；版本不匹配时不得静默引用。
+
+新的 Docling Skill 是 PDF 阅读和资料工程的默认入口。它对短小、结构简单且原生文本可靠
+的 PDF 使用轻量提取，对扫描件、复杂表格/图片、多栏和长文档使用本地 Docling；关键证据
+仍回到原 PDF 页面。`pdf:pdf` 继续负责原页渲染、表单、PDF 创建/编辑和版面检查。
+
+在另一台 Windows 机器部署时，先安装 uv 和所需工具。只需要通用 Docling CLI 时可使用：
+
+```powershell
+uv tool install docling
+docling --version
+```
+
+要复现本仓库带 CUDA、RapidOCR 和 ESPDocs 的固定环境，使用前文的 `uv sync --dev`，不要
+用通用 tool 环境替代项目 `.venv`。安装匹配的 ESP-IDF 后，在其导出终端中设置 `IDF_PATH`，
+再从仓库根目录部署两个 Skill 和全局规则：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-codex-assets.ps1
+```
+
+默认目标为 `$env:CODEX_HOME`，未设置时使用 `%USERPROFILE%\.codex`。测试其他目录或使用
+自定义 Codex Home 时传入 `-CodexHome D:\path\to\.codex`。安装器只替换本仓库管理的两个
+同名 Skill 和全局 `AGENTS.md`，不会删除其他 Skill。PDF、语料、SQLite、模型缓存和渲染
+页面仍保存在本机，不随 Git 同步。当前仓库不包含 Claude Code、OpenCode 或 Hermes 适配。
 
 ## JSON 与错误处理
 

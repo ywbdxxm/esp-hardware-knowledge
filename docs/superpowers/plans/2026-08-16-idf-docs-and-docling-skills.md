@@ -215,7 +215,7 @@ git commit -m "feat: add adaptive Docling PDF skill"
 - Create: `scripts/install-codex-assets.ps1`
 - Modify: `README.md`
 
-- [ ] **Step 1: Write failing routing and installer tests**
+- [x] **Step 1: Write failing routing and installer tests**
 
 Add tests requiring the global rules to load the Docling Skill for PDF research without claiming it
 owns creation/forms, and requiring a deployment script that accepts a custom Codex home:
@@ -240,13 +240,13 @@ def test_portable_codex_installer_manages_both_skills() -> None:
     assert "AGENTS.md" in text
 ```
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 Run `uv run pytest tests/test_codex_assets.py -v`.
 
 Expected: FAIL because the global PDF rule and installer do not exist.
 
-- [ ] **Step 3: Add the routing rule, installer, and README guidance**
+- [x] **Step 3: Add the routing rule, installer, and README guidance**
 
 The installer accepts:
 
@@ -271,7 +271,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install-codex-assets.ps1
 Document the custom `-CodexHome` option, `uv tool install docling`, IDF discovery order, local-only
 runtime data, and the distinction between Docling research and `pdf:pdf` visual/authoring work.
 
-- [ ] **Step 4: Test installer in an isolated temporary destination**
+- [x] **Step 4: Test installer in an isolated temporary destination**
 
 Run:
 
@@ -285,7 +285,7 @@ Get-ChildItem "$testCodexHome\skills" -Directory
 Expected: both AGENTS hashes match and exactly the two managed Skill directories are present in the
 fresh destination. Remove this exact temporary test directory after verification.
 
-- [ ] **Step 5: Run asset tests and both Skill validators**
+- [x] **Step 5: Run asset tests and both Skill validators**
 
 Run:
 
@@ -297,7 +297,7 @@ uv run python "$env:USERPROFILE\.codex\skills\.system\skill-creator\scripts\quic
 
 Expected: all pass.
 
-- [ ] **Step 6: Commit Task 3**
+- [x] **Step 6: Commit Task 3**
 
 ```powershell
 git add codex/AGENTS.md scripts/install-codex-assets.ps1 README.md tests/test_codex_assets.py
