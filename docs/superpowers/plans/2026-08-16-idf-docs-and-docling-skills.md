@@ -311,7 +311,7 @@ git commit -m "feat: deploy portable Codex document workflows"
 - Deploy: `%USERPROFILE%\.codex\skills\esp32-ai-hardware-engineering\`
 - Deploy: `%USERPROFILE%\.codex\skills\docling-local-document-engineering\`
 
-- [ ] **Step 1: Run the installer against the real Codex home**
+- [x] **Step 1: Run the installer against the real Codex home**
 
 Run:
 
@@ -321,13 +321,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install-codex-assets.ps1
 
 Expected: the global AGENTS path and both Skill paths are printed.
 
-- [ ] **Step 2: Verify canonical/deployed hashes recursively**
+- [x] **Step 2: Verify canonical/deployed hashes recursively**
 
 Compare `codex/AGENTS.md` with `%USERPROFILE%\.codex\AGENTS.md`, then compare every relative file
 and SHA-256 under each canonical and deployed Skill directory. Expected: no missing, extra, or
 different files.
 
-- [ ] **Step 3: Run fresh complete quality gates**
+- [x] **Step 3: Run fresh complete quality gates**
 
 Run:
 
@@ -343,7 +343,7 @@ Expected: Ruff passes; all tests pass; doctor reports healthy; verify reports pa
 golden cases and top-5 recall at or above 95%; only the implementation-plan checkbox update may be
 uncommitted.
 
-- [ ] **Step 4: Update this plan's completed checkboxes and commit**
+- [x] **Step 4: Update this plan's completed checkboxes and commit**
 
 ```powershell
 git add docs/superpowers/plans/2026-08-16-idf-docs-and-docling-skills.md
