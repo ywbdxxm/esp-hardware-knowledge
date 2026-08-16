@@ -30,7 +30,7 @@
 - Modify: `skills/esp32-ai-hardware-engineering/SKILL.md`
 - Create: `skills/esp32-ai-hardware-engineering/references/esp-idf-local-docs.md`
 
-- [ ] **Step 1: Write the failing asset test**
+- [x] **Step 1: Write the failing asset test**
 
 Add a test that reads the new reference and asserts the required behavior:
 
@@ -53,7 +53,7 @@ def test_esp32_skill_uses_version_matched_local_idf_documentation() -> None:
     assert "original pdf" in reference.casefold()
 ```
 
-- [ ] **Step 2: Run the focused test and verify RED**
+- [x] **Step 2: Run the focused test and verify RED**
 
 Run:
 
@@ -63,7 +63,7 @@ uv run pytest tests/test_codex_assets.py::test_esp32_skill_uses_version_matched_
 
 Expected: FAIL because `esp-idf-local-docs.md` does not exist.
 
-- [ ] **Step 3: Add the minimal reference and routing**
+- [x] **Step 3: Add the minimal reference and routing**
 
 The new reference must define this deterministic order:
 
@@ -80,7 +80,7 @@ original PDF/TRM.
 Update the main Skill workflow and quick-reference table so API, Kconfig, build, migration, and
 example questions load this reference.
 
-- [ ] **Step 4: Run the focused test and Skill validator and verify GREEN**
+- [x] **Step 4: Run the focused test and Skill validator and verify GREEN**
 
 Run:
 
@@ -91,7 +91,7 @@ uv run python "$env:USERPROFILE\.codex\skills\.system\skill-creator\scripts\quic
 
 Expected: all asset tests pass and validator prints `Skill is valid!`.
 
-- [ ] **Step 5: Commit Task 1**
+- [x] **Step 5: Commit Task 1**
 
 ```powershell
 git add tests/test_codex_assets.py skills/esp32-ai-hardware-engineering
@@ -361,4 +361,3 @@ git status --short --branch
 ```
 
 Expected: `main` tracks `origin/main` with no uncommitted files.
-
