@@ -58,6 +58,67 @@ $env:ESPDOCS_SOURCE_BASE = "D:\path\to\AI-HRADWARE"
 
 ## 常用工作流
 
+### 日常只读检索
+
+Codex 和其他自动化调用优先使用已部署的稳定启动器，而不是依赖当前目录或全局
+`espdocs` 命令。已知精确型号时，日常单问题路径为一次 readiness、一次 compact 精确搜索、
+一次完整页查看，以及仅在证据门禁要求时执行的一次原页核验：
+
+```powershell
+$codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $env:USERPROFILE ".codex" }
+$runner = Join-Path $codexHome "skills/hardware-document-research/scripts/invoke-espdocs.ps1"
+& $runner doctor --json
+& $runner search "GPIO_STRAP_REG" --vendor espressif --family esp32 `
+  --part esp32-c3 --type technical_reference_manual --limit 5 --compact --json
+& $runner show 123 --json
+& $runner source 123 --json
+```
+
+只看 `doctor.readiness.query` 判断已有索引能否查询；GPU/Docling 不可用于入库时，健康索引
+仍可检索。型号、系列或可用文档类型不明确时，在 search 前增加一次 `inventory --json`，
+不要猜过滤值。compact 结果用于选择候选，`show` 读取完整证据单元；只有结果要求原文检查，
+或结论涉及电气值、寄存器、引脚、时序、表格、图和脚注时才调用 `source`。
+
+`verify` 是入库、配置迁移、源文件变化或疑似损坏后的维护门禁，不是每次只读查询的前置步骤。
+可从任意目录执行整套机器验收：
+
+```powershell
+$repoRoot = [Environment]::GetEnvironmentVariable("ESP_HARDWARE_KNOWLEDGE_ROOT", "User")
+$workflow = Join-Path $repoRoot "scripts/check-research-workflow.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File $workflow -Launcher $runner
+```
+
+成功输出中的 `passed` 和五项 `checks` 均为 true。脚本不运行 ingest；只有
+`doctor.readiness.verify_recommended=true` 时才追加完整 verify。
+
+### 新增手册与维护
+
+新增手册时保留原始文件，把它放到 `ESPDOCS_SOURCE_BASE` 下受控的资料目录，并在
+`config/documents.toml` 增加 schema-v2 明确身份。路径保持相对于 source base，不写个人绝对
+路径；型号、变体、语言和文档修订未知时明确写 `unknown`，不得从文件名猜测：
+
+```toml
+[[documents]]
+path = "docs/PMIC/example.pdf"
+vendor = "vendor-name"
+family = "device-family"
+parts = ["exact-part-number"]
+document_type = "datasheet"
+language = "en-US"
+document_revision = "document-revision"
+```
+
+先执行 `ingest --dry-run --json` 核对身份与文件，再以
+`ingest --document example.pdf --json` 更新语料和索引，最后运行 `verify --json` 和本节的
+机器验收。非 PDF 格式只有在存在真实原始来源、格式适配器和对应黄金案例后才能加入。
+
+源文件发生变化时，旧索引中的关键结论不能继续引用。`source` 会因 SHA-256 不匹配拒绝该页；
+先确认替换文件仍对应相同精确器件和正确修订，再对该精确文件重新 ingest，并通过 verify 后
+恢复使用。若替换是意外的，恢复原哈希文件比重写索引更安全。
+
+### 入库与完整维护
+
 先查看本次会处理哪些文件：
 
 ```powershell
