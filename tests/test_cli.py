@@ -87,7 +87,7 @@ def test_help_lists_all_commands() -> None:
     result = CliRunner().invoke(app, ["--help"])
 
     assert result.exit_code == 0
-    for command in ("ingest", "search", "show", "source", "doctor", "verify"):
+    for command in ("ingest", "inventory", "search", "show", "source", "doctor", "verify"):
         assert command in result.stdout
 
 
@@ -117,6 +117,8 @@ def test_source_json_renders_authoritative_page(cli_runtime: dict[str, Path]) ->
 
     assert result.exit_code == 0
     assert payload["source"]["evidence_grade"] == "A"
+    assert payload["source"]["source_ref"].startswith("sha256:")
+    assert payload["source"]["locator"]["physical_page"] == 1
     assert Path(payload["source"]["render_path"]).is_file()
 
 
@@ -244,10 +246,49 @@ def test_ingest_dry_run_does_not_convert(cli_runtime: dict[str, Path]) -> None:
 
 
 def test_invalid_filter_uses_configuration_exit_code(cli_runtime: dict[str, Path]) -> None:
-    result = CliRunner().invoke(app, ["search", "UART", "--chip", "esp8266", "--json"])
+    result = CliRunner().invoke(app, ["search", "UART", "--chip", "bad value", "--json"])
 
     assert result.exit_code == 2
-    assert json.loads(result.stdout)["error"]["type"] == "RetrievalError"
+    assert json.loads(result.stdout)["error"]["type"] == "InvalidFilterValue"
+
+
+def test_unknown_filter_returns_empty_exact_scope(cli_runtime: dict[str, Path]) -> None:
+    result = CliRunner().invoke(app, ["search", "UART", "--part", "esp8266", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["results"] == []
+
+
+def test_inventory_reports_indexed_identity_values(cli_runtime: dict[str, Path]) -> None:
+    result = CliRunner().invoke(app, ["inventory", "--json"])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 0
+    assert payload["schema_version"] == 1
+    assert "esp32-c3" in payload["inventory"]["parts"]
+
+
+def test_compact_search_omits_internal_paths(cli_runtime: dict[str, Path]) -> None:
+    result = CliRunner().invoke(
+        app,
+        ["search", "UART", "--part", "esp32-c3", "--compact", "--json"],
+    )
+    hit = json.loads(result.stdout)["results"][0]
+
+    assert set(hit) == {
+        "page_id",
+        "source_ref",
+        "vendor",
+        "family",
+        "parts",
+        "document_type",
+        "document_revision",
+        "locator",
+        "snippet",
+        "evidence_grade",
+        "requires_source_check",
+        "source_check_reasons",
+    }
 
 
 def test_missing_index_uses_runtime_exit_code(cli_runtime: dict[str, Path]) -> None:

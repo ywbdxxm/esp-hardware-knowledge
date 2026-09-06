@@ -88,6 +88,18 @@ class ReadinessReport:
 
 
 @dataclass(frozen=True)
+class DocumentInventory:
+    vendors: tuple[str, ...]
+    families: tuple[str, ...]
+    parts: tuple[str, ...]
+    variants: tuple[str, ...]
+    document_types: tuple[str, ...]
+    languages: tuple[str, ...]
+    revisions: tuple[str, ...]
+    document_count: int
+
+
+@dataclass(frozen=True)
 class SearchResult:
     page_id: int
     document_id: str

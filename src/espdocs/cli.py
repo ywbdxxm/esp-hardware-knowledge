@@ -57,6 +57,26 @@ def _search_service(paths: AppPaths) -> SearchService:
     return SearchService(paths.index_path, paths.repo_root / "config" / "aliases.toml")
 
 
+def _compact_search_result(result: Any) -> dict[str, Any]:
+    identity = result.identity
+    if identity is None or result.locator is None or result.source_ref is None:
+        raise RetrievalError("Indexed result is missing normalized identity metadata")
+    return {
+        "page_id": result.page_id,
+        "source_ref": result.source_ref,
+        "vendor": identity.vendor,
+        "family": identity.family,
+        "parts": identity.parts,
+        "document_type": identity.document_type,
+        "document_revision": identity.document_revision,
+        "locator": result.locator,
+        "snippet": result.snippet,
+        "evidence_grade": result.evidence_grade,
+        "requires_source_check": result.requires_source_check,
+        "source_check_reasons": result.source_check_reasons,
+    }
+
+
 @app.command()
 def ingest(
     dry_run: bool = typer.Option(False, "--dry-run", help="List work without conversion"),
@@ -80,7 +100,14 @@ def ingest(
                         {
                             "filename": record.source_path.name,
                             "chip": record.chip,
+                            "vendor": record.identity.vendor if record.identity else "espressif",
+                            "family": record.identity.family if record.identity else "esp32",
+                            "parts": record.identity.parts if record.identity else (record.chip,),
                             "document_type": record.document_type,
+                            "language": record.identity.language if record.identity else "unknown",
+                            "document_revision": record.version,
+                            "source_format": record.source_format,
+                            "source_ref": record.source_ref,
                             "sha256": record.sha256,
                             "pdf_pages": record.page_count,
                             "action": "would_ingest",
@@ -109,19 +136,52 @@ def ingest(
 
 
 @app.command()
+def inventory(
+    json_output: bool = typer.Option(False, "--json", help="Emit versioned JSON"),
+) -> None:
+    """List exact identity values available in the active index."""
+    try:
+        result = _search_service(_paths()).inventory()
+        _emit({"schema_version": 1, "inventory": result}, json_output)
+    except RetrievalError as error:
+        missing_index = "index does not exist" in str(error)
+        _fail(
+            "IndexUnavailable" if missing_index else type(error).__name__,
+            str(error),
+            3 if missing_index else 2,
+            json_output,
+        )
+
+
+@app.command()
 def search(
     query: str = typer.Argument(..., help="Keyword, phrase, register, or signal"),
     chip: str | None = typer.Option(None, "--chip"),
+    vendor: str | None = typer.Option(None, "--vendor"),
+    family: str | None = typer.Option(None, "--family"),
+    part: str | None = typer.Option(None, "--part"),
+    variant: str | None = typer.Option(None, "--variant"),
     document_type: str | None = typer.Option(None, "--type"),
+    language: str | None = typer.Option(None, "--language"),
     limit: int = typer.Option(10, "--limit"),
+    compact: bool = typer.Option(False, "--compact", help="Omit internal paths and rank details"),
     json_output: bool = typer.Option(False, "--json", help="Emit versioned JSON"),
 ) -> None:
     """Search candidate evidence without generating an answer."""
     try:
         results = _search_service(_paths()).search(
-            query, chip=chip, document_type=document_type, limit=limit
+            query,
+            chip=chip,
+            vendor=vendor,
+            family=family,
+            part=part,
+            variant=variant,
+            document_type=document_type,
+            language=language,
+            limit=limit,
         )
-        _emit({"schema_version": 1, "query": query, "results": results}, json_output)
+        output_results = [_compact_search_result(result) for result in results] if compact else results
+        _emit({"schema_version": 1, "query": query, "results": output_results}, json_output)
     except RetrievalError as error:
         missing_index = "index does not exist" in str(error)
         _fail(
@@ -166,7 +226,10 @@ def source_command(
             page_no=page.pdf_page,
             output_dir=paths.renders_dir,
         )
-        _emit({"schema_version": 1, "source": view}, json_output)
+        source_payload = _jsonable(view)
+        source_payload["source_ref"] = page.source_ref
+        source_payload["locator"] = page.locator
+        _emit({"schema_version": 1, "source": source_payload}, json_output)
     except RetrievalError as error:
         missing_index = "index does not exist" in str(error)
         _fail(
