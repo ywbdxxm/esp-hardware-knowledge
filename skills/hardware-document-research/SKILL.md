@@ -5,13 +5,17 @@ description: "Use when answering source-grounded questions about semiconductor o
 
 # Hardware Document Research
 
-Resolve the exact vendor, family, exact part, variant or package, silicon revision, and project
-context before accepting a hardware claim. Mark unknown identity instead of substituting a related
-device.
+Use a context-driven evidence contract for any vendor or component family:
 
-For local lookup and evidence grading, read `references/evidence-workflow.md`. For project context
-and cross-machine discovery, read `references/project-context.md`.
+1. Resolve the project context and exact part or component identity. Mark unknown fields instead of
+   substituting a related device.
+2. Discover the available corpus, query capabilities, and valid identity filters; do not assume a
+   particular machine, library, or indexed part.
+3. Query within the narrowest verified identity and document scope. Treat an exact-scope miss as a
+   gap, not permission to broaden silently.
+4. Verify critical claims against the authoritative source locator. Generated text is a locator,
+   not final evidence.
 
-Use the local corpus when query-ready. Fall back only to authoritative vendor material and disclose
-the fallback. Critical values, pins, timing, registers, tables, and diagrams require the original
-source locator; generated text is a locator rather than final evidence.
+Read [project-context.md](references/project-context.md) when identity, project ownership, or
+cross-machine discovery matters. Read [evidence-workflow.md](references/evidence-workflow.md) for
+local lookup, source grading, no-match handling, and authoritative fallback.

@@ -6,9 +6,9 @@ official-vendor fallback workflow. This reference adds only ESP32-specific targe
 ## Establish the Exact Target
 
 Before searching, resolve the project `IDF_TARGET`, SoC, module or orderable part, board revision,
-and project-selected ESP-IDF revision. A module such as `esp32-c3-wroom-02` is not interchangeable
-with the bare `esp32-c3` chip for package, pin, antenna, flash, PSRAM, or module electrical facts.
-Do not answer a C3 question from an S3 result or infer a module from the family name.
+and project-selected ESP-IDF revision. A module is not interchangeable with its bare SoC for
+package, pin, antenna, flash, PSRAM, or module electrical facts. Do not answer one target from a
+related target's result or infer a module from the family name.
 
 ## Select the Source Owner
 
@@ -29,10 +29,14 @@ Use the launcher maintained by `hardware-document-research`:
 $codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $env:USERPROFILE ".codex" }
 $runner = Join-Path $codexHome "skills/hardware-document-research/scripts/invoke-espdocs.ps1"
 & $runner doctor --json
-& $runner search "GPIO_STRAP_REG" --vendor espressif --part esp32-c3 `
-  --type technical_reference_manual --limit 5 --compact --json
-& $runner show <page_id> --json
-& $runner source <page_id> --json
+& $runner inventory --json
+$query = "<claim-oriented query>"
+$part = "<exact-part-id>"
+$search = & $runner search $query --vendor espressif --part $part `
+  --type technical_reference_manual --limit 5 --compact --json | ConvertFrom-Json
+$pageId = $search.results[0].page_id
+& $runner show $pageId --json
+& $runner source $pageId --json
 ```
 
 Use the exact module `--part` for module facts. Legacy `--chip` remains compatible, but new research

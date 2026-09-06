@@ -9,9 +9,13 @@ $codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $env:USER
 $runner = Join-Path $codexHome "skills/hardware-document-research/scripts/invoke-espdocs.ps1"
 & $runner doctor --json
 & $runner inventory --json
-$search = & $runner search "charge current translator" `
-  --vendor texas-instruments --family bq2407x --part bq24075 `
-  --type datasheet --limit 5 --compact --json | ConvertFrom-Json
+$query = "<claim-oriented query>"
+$vendor = "<vendor-id>"
+$family = "<family-id>"
+$part = "<exact-part-id>"
+$documentType = "<document-type>"
+$search = & $runner search $query --vendor $vendor --family $family --part $part `
+  --type $documentType --limit 5 --compact --json | ConvertFrom-Json
 $pageId = $search.results[0].page_id
 & $runner show $pageId --json
 & $runner source $pageId --json

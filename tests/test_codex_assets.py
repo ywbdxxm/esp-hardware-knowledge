@@ -8,12 +8,13 @@ HARDWARE_RESEARCH_SKILL_ROOT = REPO_ROOT / "skills" / "hardware-document-researc
 
 def test_codex_agents_requires_esp32_skill_for_code_and_documentation() -> None:
     text = (REPO_ROOT / "codex" / "AGENTS.md").read_text(encoding="utf-8")
+    normalized = " ".join(text.casefold().split())
 
     assert "MUST use" in text
     assert "esp32-ai-hardware-engineering" in text
-    assert "datasheet" in text.casefold()
-    assert "technical reference manual" in text.casefold()
-    assert "build, flash, debug" in text.casefold()
+    assert "datasheet" in normalized
+    assert "technical reference manual" in normalized
+    assert "build, flash, debug" in normalized
 
 
 def test_skill_routes_local_document_research_through_espdocs() -> None:
@@ -216,3 +217,38 @@ def test_managed_codex_assets_contain_no_personal_workspace_path() -> None:
         for path in root.rglob("*"):
             if path.is_file():
                 assert "Desktop\\AI-HRADWARE" not in path.read_text(encoding="utf-8")
+
+
+def test_reusable_assets_do_not_embed_evaluation_component_identities() -> None:
+    managed = [REPO_ROOT / "codex", REPO_ROOT / "skills"]
+    evaluation_identities = ("bq24075", "esp32-c3", "esp32-s3")
+
+    for root in managed:
+        for path in root.rglob("*"):
+            if not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8").casefold()
+            for identity in evaluation_identities:
+                assert identity not in text, f"{identity} is embedded in {path}"
+
+
+def test_reusable_entrypoints_defer_machine_specific_mechanics() -> None:
+    entrypoints = (
+        REPO_ROOT / "codex" / "AGENTS.md",
+        HARDWARE_RESEARCH_SKILL_ROOT / "SKILL.md",
+        SKILL_ROOT / "SKILL.md",
+        DOCLING_SKILL_ROOT / "SKILL.md",
+    )
+    deferred_terms = (
+        "ESPDOCS_SOURCE_BASE",
+        "ESP_HARDWARE_KNOWLEDGE_ROOT",
+        "CUDA 13.0",
+        "EIM-managed",
+        "export.ps1",
+        "invoke-espdocs.ps1",
+    )
+
+    for path in entrypoints:
+        text = path.read_text(encoding="utf-8")
+        for term in deferred_terms:
+            assert term not in text, f"{term} should be deferred from {path}"
