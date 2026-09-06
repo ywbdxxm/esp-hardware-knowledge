@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from espdocs.ingest import IngestError, ingest_document, load_manifest
-from espdocs.models import DocumentRecord, PageRecord
+from espdocs.models import DocumentIdentity, DocumentRecord, PageRecord
 
 
 def make_record(tmp_path: Path, *, pages: int = 2, digest: str = "a" * 64) -> DocumentRecord:
@@ -20,6 +20,17 @@ def make_record(tmp_path: Path, *, pages: int = 2, digest: str = "a" * 64) -> Do
         page_count=pages,
         size_bytes=6,
         modified_ns=1,
+        identity=DocumentIdentity(
+            vendor="espressif",
+            family="esp32",
+            parts=("esp32-c3",),
+            variant=None,
+            document_type="datasheet",
+            language="zh-cn",
+            document_revision="unknown",
+        ),
+        source_ref=f"sha256:{digest}",
+        source_format="pdf",
     )
 
 
@@ -83,6 +94,15 @@ def test_successful_ingest_promotes_validated_manifest(tmp_path: Path) -> None:
     assert manifest["document"]["version"] == "1.4"
     assert manifest["validation"]["passed"] is True
     assert [page["pdf_page"] for page in manifest["pages"]] == [1, 2]
+    assert manifest["schema_version"] == 2
+    assert manifest["document"]["identity"]["parts"] == ["esp32-c3"]
+    assert manifest["document"]["source_ref"] == f"sha256:{record.sha256}"
+    assert manifest["pages"][0]["locator"] == {
+        "source_format": "pdf",
+        "kind": "pdf_page",
+        "physical_page": 1,
+        "anchor": None,
+    }
     assert not list((corpus / ".staging").glob(f"{record.document_id}-*"))
 
 

@@ -4,6 +4,7 @@ import pymupdf
 import pytest
 
 from espdocs.catalog import (
+    SourceConfigurationError,
     UnclassifiedDocumentError,
     classify_document,
     discover_documents,
@@ -94,3 +95,92 @@ def test_source_config_finds_shared_hardware_root_from_worktree(tmp_path: Path) 
         SourceRoot(chip="esp32-c3", path=c3.resolve()),
         SourceRoot(chip="esp32-s3", path=s3.resolve()),
     ]
+    assert roots[0].vendor == "espressif"
+    assert roots[0].family == "esp32"
+    assert roots[0].parts == ("esp32-c3",)
+    assert roots[0].source_format == "pdf"
+    assert roots[0].document_revision == "unknown"
+
+
+def test_schema_v2_loads_explicit_normalized_document_identity(
+    monkeypatch, tmp_path: Path
+) -> None:
+    hardware = tmp_path / "hardware-library"
+    esp = write_pdf(hardware / "docs" / "ESP32-C3" / "esp32-c3_datasheet_cn.pdf")
+    bq = write_pdf(hardware / "docs" / "PMIC" / "bq2407x.pdf")
+    repo = tmp_path / "repo"
+    config = repo / "config" / "documents.toml"
+    config.parent.mkdir(parents=True)
+    config.write_text(
+        """
+schema_version = 2
+
+[[documents]]
+path = "docs/ESP32-C3/esp32-c3_datasheet_cn.pdf"
+vendor = "Espressif"
+family = "ESP32"
+parts = ["ESP32-C3"]
+document_type = "Datasheet"
+language = "zh-CN"
+document_revision = "unknown"
+
+[[documents]]
+path = "docs/PMIC/bq2407x.pdf"
+vendor = "Texas-Instruments"
+family = "BQ2407X"
+parts = ["BQ24072", "BQ24073", "BQ24074", "BQ24075", "BQ24079"]
+document_type = "Datasheet"
+language = "zh-CN"
+document_revision = "ZHCSIF0N"
+""".strip(),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("ESPDOCS_SOURCE_BASE", str(hardware))
+
+    sources = load_source_roots(config, repo_root=repo)
+
+    assert [source.path for source in sources] == [esp.resolve(), bq.resolve()]
+    assert sources[0].vendor == "espressif"
+    assert sources[0].family == "esp32"
+    assert sources[0].parts == ("esp32-c3",)
+    assert sources[0].language == "zh-cn"
+    assert sources[1].vendor == "texas-instruments"
+    assert sources[1].family == "bq2407x"
+    assert sources[1].parts[-2] == "bq24075"
+    assert sources[1].document_revision == "ZHCSIF0N"
+
+
+@pytest.mark.parametrize(
+    "extra",
+    (
+        'mystery = "unsupported"',
+        "",
+    ),
+)
+def test_schema_v2_rejects_unknown_or_missing_identity_fields(
+    monkeypatch, tmp_path: Path, extra: str
+) -> None:
+    hardware = tmp_path / "library"
+    write_pdf(hardware / "docs" / "part.pdf")
+    config = tmp_path / "repo" / "config" / "documents.toml"
+    config.parent.mkdir(parents=True)
+    family = 'family = "test-family"' if extra else ""
+    config.write_text(
+        f"""
+schema_version = 2
+[[documents]]
+path = "docs/part.pdf"
+vendor = "vendor"
+{family}
+parts = ["part"]
+document_type = "datasheet"
+language = "en"
+document_revision = "1.0"
+{extra}
+""".strip(),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("ESPDOCS_SOURCE_BASE", str(hardware))
+
+    with pytest.raises(SourceConfigurationError):
+        load_source_roots(config, repo_root=config.parents[1])

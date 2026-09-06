@@ -91,6 +91,26 @@ def test_index_records_traceability_metadata(tmp_path: Path) -> None:
     assert row[2] == "a" * 64
     assert row[3:] == (17, 1)
 
+    with sqlite3.connect(database) as connection:
+        identity = connection.execute(
+            """
+            SELECT vendor, family, parts_json, document_revision, source_format,
+                   source_ref, locator_kind, physical_page, anchor
+            FROM documents JOIN pages USING(document_id)
+            """
+        ).fetchone()
+    assert identity == (
+        "espressif",
+        "esp32",
+        '["esp32-c3"]',
+        "1.4",
+        "pdf",
+        f"sha256:{'a' * 64}",
+        "pdf_page",
+        17,
+        None,
+    )
+
 
 def test_index_ignores_staging_directories(tmp_path: Path) -> None:
     corpus = tmp_path / "corpus"

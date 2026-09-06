@@ -1,7 +1,100 @@
-[[sources]]
-chip = "esp32-c3"
-path = "docs/ESP32-C3"
+schema_version = 2
 
-[[sources]]
-chip = "esp32-s3"
-path = "docs/ESP32-S3"
+[[documents]]
+path = "docs/ESP32-C3/esp-hardware-design-guidelines-zh_CN-master-esp32c3.pdf"
+vendor = "espressif"
+family = "esp32"
+parts = ["esp32-c3"]
+document_type = "hardware_design_guidelines"
+language = "zh-CN"
+document_revision = "unknown"
+
+[[documents]]
+path = "docs/ESP32-C3/esp32-c3_datasheet_cn.pdf"
+vendor = "espressif"
+family = "esp32"
+parts = ["esp32-c3"]
+document_type = "datasheet"
+language = "zh-CN"
+document_revision = "unknown"
+
+[[documents]]
+path = "docs/ESP32-C3/esp32-c3_technical_reference_manual_cn.pdf"
+vendor = "espressif"
+family = "esp32"
+parts = ["esp32-c3"]
+document_type = "technical_reference_manual"
+language = "zh-CN"
+document_revision = "unknown"
+
+[[documents]]
+path = "docs/ESP32-C3/esp32-c3-mini-1_datasheet_cn.pdf"
+vendor = "espressif"
+family = "esp32"
+parts = ["esp32-c3-mini-1"]
+document_type = "module_datasheet"
+language = "zh-CN"
+document_revision = "unknown"
+
+[[documents]]
+path = "docs/ESP32-C3/esp32-c3-wroom-02_datasheet_cn.pdf"
+vendor = "espressif"
+family = "esp32"
+parts = ["esp32-c3-wroom-02"]
+document_type = "module_datasheet"
+language = "zh-CN"
+document_revision = "unknown"
+
+[[documents]]
+path = "docs/ESP32-S3/esp-hardware-design-guidelines-zh_CN-master-esp32s3.pdf"
+vendor = "espressif"
+family = "esp32"
+parts = ["esp32-s3"]
+document_type = "hardware_design_guidelines"
+language = "zh-CN"
+document_revision = "unknown"
+
+[[documents]]
+path = "docs/ESP32-S3/esp32-s3_datasheet_cn.pdf"
+vendor = "espressif"
+family = "esp32"
+parts = ["esp32-s3"]
+document_type = "datasheet"
+language = "zh-CN"
+document_revision = "unknown"
+
+[[documents]]
+path = "docs/ESP32-S3/esp32-s3_technical_reference_manual_cn.pdf"
+vendor = "espressif"
+family = "esp32"
+parts = ["esp32-s3"]
+document_type = "technical_reference_manual"
+language = "zh-CN"
+document_revision = "unknown"
+
+[[documents]]
+path = "docs/ESP32-S3/esp32-s3-mini-1_mini-1u_datasheet_cn.pdf"
+vendor = "espressif"
+family = "esp32"
+parts = ["esp32-s3-mini-1", "esp32-s3-mini-1u"]
+document_type = "module_datasheet"
+language = "zh-CN"
+document_revision = "unknown"
+
+[[documents]]
+path = "docs/ESP32-S3/esp32-s3-wroom-1_wroom-1u_datasheet_cn.pdf"
+vendor = "espressif"
+family = "esp32"
+parts = ["esp32-s3-wroom-1", "esp32-s3-wroom-1u"]
+document_type = "module_datasheet"
+language = "zh-CN"
+document_revision = "unknown"
+
+[[documents]]
+path = "docs/PMIC/bq2407x.pdf"
+vendor = "texas-instruments"
+family = "bq2407x"
+parts = ["bq24072", "bq24073", "bq24074", "bq24075", "bq24079"]
+document_type = "datasheet"
+language = "zh-CN"
+document_revision = "ZHCSIF0N"

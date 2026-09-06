@@ -14,7 +14,7 @@ from typing import Any
 from uuid import uuid4
 
 from espdocs.markdown import normalize_local_image_references
-from espdocs.models import DocumentRecord, PageRecord
+from espdocs.models import DocumentIdentity, DocumentRecord, PageRecord
 from espdocs.parser import convert_document
 
 
@@ -89,14 +89,29 @@ def _write_manifest(
     stage: Path,
     warnings: list[str],
 ) -> None:
-    detected_version = _extract_version(pages)
+    identity = record.identity or DocumentIdentity(
+        vendor="espressif",
+        family="esp32",
+        parts=(record.chip,),
+        variant=None,
+        document_type=record.document_type,
+        language="unknown",
+        document_revision=record.version,
+    )
+    detected_version = identity.document_revision
+    if detected_version == "unknown":
+        detected_version = _extract_version(pages)
     if detected_version == "unknown":
         warnings.append("unknown_document_version")
     document = asdict(record)
     document["source_path"] = str(record.source_path)
     document["version"] = detected_version
+    document["identity"] = asdict(identity)
+    document["identity"]["document_revision"] = detected_version
+    document["source_ref"] = record.source_ref or f"sha256:{record.sha256}"
+    document["source_format"] = record.source_format
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "document": document,
         "parser": {
             "docling": package_version("docling"),
@@ -110,6 +125,12 @@ def _write_manifest(
                 "content_type": page.content_type,
                 "warnings": list(page.warnings),
                 "verified": True,
+                "locator": {
+                    "source_format": record.source_format,
+                    "kind": "pdf_page",
+                    "physical_page": page.page_no,
+                    "anchor": None,
+                },
             }
             for page in pages
         ],

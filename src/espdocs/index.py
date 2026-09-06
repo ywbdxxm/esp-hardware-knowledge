@@ -35,7 +35,15 @@ CREATE TABLE documents (
     sha256 TEXT NOT NULL,
     page_count INTEGER NOT NULL,
     size_bytes INTEGER NOT NULL,
-    modified_ns INTEGER NOT NULL
+    modified_ns INTEGER NOT NULL,
+    vendor TEXT NOT NULL,
+    family TEXT NOT NULL,
+    parts_json TEXT NOT NULL,
+    variant TEXT,
+    language TEXT NOT NULL,
+    document_revision TEXT NOT NULL,
+    source_format TEXT NOT NULL,
+    source_ref TEXT NOT NULL
 );
 
 CREATE TABLE pages (
@@ -47,6 +55,9 @@ CREATE TABLE pages (
     content_type TEXT NOT NULL,
     warnings_json TEXT NOT NULL,
     verified INTEGER NOT NULL,
+    locator_kind TEXT NOT NULL,
+    physical_page INTEGER,
+    anchor TEXT,
     UNIQUE(document_id, pdf_page)
 );
 
@@ -98,12 +109,23 @@ def _insert_document(
     manifest: dict[str, Any],
 ) -> int:
     document = manifest["document"]
+    identity = document.get("identity") or {
+        "vendor": "espressif",
+        "family": "esp32",
+        "parts": [document["chip"]],
+        "variant": None,
+        "language": "unknown",
+        "document_revision": document["version"],
+    }
+    source_format = str(document.get("source_format", "pdf"))
+    source_ref = str(document.get("source_ref", f"sha256:{document['sha256']}"))
     connection.execute(
         """
         INSERT INTO documents (
             document_id, chip, document_type, title, version, source_path,
-            sha256, page_count, size_bytes, modified_ns
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            sha256, page_count, size_bytes, modified_ns, vendor, family,
+            parts_json, variant, language, document_revision, source_format, source_ref
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             document["document_id"],
@@ -116,12 +138,26 @@ def _insert_document(
             document["page_count"],
             document["size_bytes"],
             document["modified_ns"],
+            identity["vendor"],
+            identity["family"],
+            json.dumps(identity["parts"], ensure_ascii=False),
+            identity.get("variant"),
+            identity["language"],
+            identity["document_revision"],
+            source_format,
+            source_ref,
         ),
     )
     page_count = 0
     document_root = document_dir.resolve()
     global_warnings = list(manifest.get("warnings", []))
     for page in manifest["pages"]:
+        locator = page.get("locator") or {
+            "source_format": source_format,
+            "kind": "pdf_page",
+            "physical_page": page["pdf_page"],
+            "anchor": None,
+        }
         markdown_path = (document_dir / page["markdown_path"]).resolve()
         if not markdown_path.is_relative_to(document_root) or not markdown_path.is_file():
             raise IndexBuildError(f"Invalid Markdown path in {document_dir.name}: {markdown_path}")
@@ -131,8 +167,9 @@ def _insert_document(
             """
             INSERT INTO pages (
                 document_id, pdf_page, markdown_path, text,
-                content_type, warnings_json, verified
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                content_type, warnings_json, verified, locator_kind,
+                physical_page, anchor
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 document["document_id"],
@@ -142,6 +179,9 @@ def _insert_document(
                 page["content_type"],
                 json.dumps(warnings, ensure_ascii=False),
                 int(bool(page["verified"])),
+                locator["kind"],
+                locator.get("physical_page"),
+                locator.get("anchor"),
             ),
         )
         connection.execute(
@@ -171,7 +211,7 @@ def build_index(corpus_dir: Path, database_path: Path) -> IndexBuildResult:
                     page_count += _insert_document(connection, document_dir, manifest)
                     document_count += 1
                 connection.execute(
-                    "INSERT INTO index_metadata(key, value) VALUES ('schema_version', '1')"
+                    "INSERT INTO index_metadata(key, value) VALUES ('schema_version', '2')"
                 )
                 integrity = connection.execute("PRAGMA integrity_check").fetchone()
                 if integrity != ("ok",):
