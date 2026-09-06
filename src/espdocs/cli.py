@@ -274,7 +274,7 @@ def doctor(
             "sqlite": sqlite3.sqlite_version,
             "fts5_trigram": trigram,
         }
-        sources_ready = all(root.path.is_dir() for root in roots)
+        sources_ready = all(root.path.exists() for root in roots)
         index_exists = paths.index_path.is_file()
         readiness_reasons: list[str] = []
         if not trigram:

@@ -133,6 +133,31 @@ def test_doctor_reports_required_components(cli_runtime: dict[str, Path]) -> Non
     assert payload["sources"]["configured"] == 2
 
 
+def test_doctor_accepts_existing_schema_v2_source_file(cli_runtime: dict[str, Path]) -> None:
+    (cli_runtime["repo"] / "config" / "documents.toml").write_text(
+        """
+schema_version = 2
+
+[[documents]]
+path = "docs/ESP32-C3/esp32-c3_datasheet_cn.pdf"
+vendor = "espressif"
+family = "esp32"
+parts = ["esp32-c3"]
+document_type = "datasheet"
+language = "zh-CN"
+document_revision = "unknown"
+""".strip(),
+        encoding="utf-8",
+    )
+
+    result = CliRunner().invoke(app, ["doctor", "--json"])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 0
+    assert payload["readiness"]["source"] is True
+    assert "missing_source" not in payload["readiness"]["reasons"]
+
+
 def test_doctor_reports_cuda_readiness(cli_runtime: dict[str, Path], monkeypatch) -> None:
     monkeypatch.delenv("ESPDOCS_DEVICE", raising=False)
     monkeypatch.setattr(
