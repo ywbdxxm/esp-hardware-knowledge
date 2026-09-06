@@ -43,6 +43,9 @@ uv run espdocs verify --json
 Reuse its reliability mechanisms when building another durable corpus, but do not make unrelated
 documents adopt ESP32 chip filters, document types, paths, or the `espdocs` command surface. Extract
 the generic pattern or extend the repository deliberately when the new collection warrants it.
+For semiconductor or electronic-component research, route identity resolution, source selection,
+and evidence decisions through `hardware-document-research`; ESPDocs is the proven PDF
+implementation, not the owner of every document format or research domain.
 
 ## Evidence and Recovery
 

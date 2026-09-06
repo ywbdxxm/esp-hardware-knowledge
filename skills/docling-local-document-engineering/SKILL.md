@@ -28,6 +28,10 @@ as a locator and the hash-matched original page as final evidence.
 **REQUIRED SUB-SKILL:** Use `pdf:pdf` for original-page rendering and visual inspection, AcroForms,
 PDF creation or editing, and final layout QA. Docling does not replace those workflows.
 
+For semiconductor or electronic-component source research, also use
+`hardware-document-research`; it owns exact-part identity, source selection, and evidence decisions,
+while this Skill owns document extraction and corpus processing.
+
 ## Quick Reference
 
 | Document or task | Route |

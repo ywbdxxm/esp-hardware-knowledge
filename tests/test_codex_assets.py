@@ -24,11 +24,12 @@ def test_skill_routes_local_document_research_through_espdocs() -> None:
 
     assert "documentation research" in skill.casefold()
     assert "local-document-retrieval.md" in skill
-    assert "espdocs doctor --json" in reference
-    assert "espdocs search" in reference
-    assert "espdocs show" in reference
-    assert "espdocs source" in reference
-    assert "--chip" in reference
+    assert "invoke-espdocs.ps1" in reference
+    assert "doctor --json" in reference
+    assert "search" in reference
+    assert "show" in reference
+    assert "source" in reference
+    assert "--part" in reference
     assert "original pdf" in reference.casefold()
 
 
@@ -64,7 +65,7 @@ def test_canonical_esp32_skill_contains_deployed_environment_rules() -> None:
     ).read_text(encoding="utf-8")
 
     assert "windows-esp-idf-environment.md" in skill
-    assert "uv run --locked --project" in local_docs
+    assert "invoke-espdocs.ps1" in local_docs
     assert "Desktop\\AI-HRADWARE" not in local_docs
     assert (SKILL_ROOT / "references" / "windows-esp-idf-environment.md").is_file()
 
@@ -154,3 +155,55 @@ def test_hardware_research_skill_has_portable_exact_source_contract() -> None:
     assert "Desktop\\AI-HRADWARE" not in skill + workflow + context
     assert "ESP-IDF" not in workflow
     assert "allow_implicit_invocation: true" in metadata
+
+
+def test_global_agents_routes_by_task_without_embedding_commands() -> None:
+    text = (REPO_ROOT / "codex" / "AGENTS.md").read_text(encoding="utf-8")
+
+    assert "hardware-document-research" in text
+    assert "esp32-ai-hardware-engineering" in text
+    assert "docling-local-document-engineering" in text
+    assert "pdf:pdf" in text
+    assert "uv run" not in text
+    assert "Desktop\\AI-HRADWARE" not in text
+
+
+def test_managed_skills_have_distinct_ownership() -> None:
+    hardware = (HARDWARE_RESEARCH_SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+    esp32 = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+    docling = (DOCLING_SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+
+    assert "exact part" in hardware.casefold()
+    assert "ESP-IDF" in esp32
+    assert "OCR" in docling
+    assert "ESP-IDF" not in docling
+
+
+def test_esp32_document_reference_delegates_general_evidence_workflow() -> None:
+    reference = (SKILL_ROOT / "references" / "local-document-retrieval.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "hardware-document-research" in reference
+    assert "invoke-espdocs.ps1" in reference
+    assert "IDF_TARGET" in reference
+    assert "uv run --locked --project" not in reference
+
+
+def test_docling_skill_selects_accelerator_from_verified_runtime() -> None:
+    workflow = (
+        DOCLING_SKILL_ROOT / "references" / "adaptive-pdf-workflow.md"
+    ).read_text(encoding="utf-8")
+
+    assert "verified runtime capability" in workflow.casefold()
+    assert "This machine uses" not in workflow
+    assert '$device = "cuda"' not in workflow
+
+
+def test_managed_codex_assets_contain_no_personal_workspace_path() -> None:
+    managed = [REPO_ROOT / "codex", REPO_ROOT / "skills"]
+
+    for root in managed:
+        for path in root.rglob("*"):
+            if path.is_file():
+                assert "Desktop\\AI-HRADWARE" not in path.read_text(encoding="utf-8")

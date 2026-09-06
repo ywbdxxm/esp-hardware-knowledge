@@ -25,10 +25,10 @@ project-selected ESP-IDF revision, and authoritative source evidence.
    [esp-idf-local-docs.md](references/esp-idf-local-docs.md) and use documentation and source from
    the project's selected ESP-IDF revision.
 5. For documentation research, registers, pins, timing, electrical characteristics, or hardware
-   design, read [local-document-retrieval.md](references/local-document-retrieval.md). Run local
-   ESPDocs through its project environment with `uv run --locked --project <espdocs-root> espdocs`;
-   a missing bare `espdocs` command on `PATH` is expected and is not a reason to downgrade.
-   Locate the project root and pass the readiness checks before deciding or coding.
+   design, use `hardware-document-research` and read
+   [local-document-retrieval.md](references/local-document-retrieval.md) for ESP32-specific target
+   and source ownership. Use the installed launcher; a missing bare `espdocs` command on `PATH` is
+   expected and is not a reason to downgrade.
 6. Map a change to the narrowest owner: application state, board capability, audio pipeline,
    protocol semantics, transport, MCP tool, persistence, assets, or build metadata.
 7. State invariants: single writer, legal transitions, task/driver owner, queue capacity and full
@@ -66,8 +66,8 @@ project-selected ESP-IDF revision, and authoritative source evidence.
 - Validate every transport sharing changed protocol semantics.
 - Keep general-purpose Python and uv environments separate from the ESP-IDF-managed Python
   environment. Matching Python versions do not prove matching environments.
-- Treat the local ESPDocs project as a project-scoped CLI. Do not require a global `espdocs` PATH
-  entry; invoke the canonical `uv run --locked --project <espdocs-root> espdocs ...` command.
+- Use the stable hardware-research launcher for ESPDocs. Do not require a global `espdocs` PATH
+  entry or duplicate repository-discovery logic in ESP32 guidance.
 - Never assume an ESP-IDF checkout's `export.ps1` is compatible with an EIM-managed tool registry.
   Prefer the selected installation's matching activation script and verify the result.
 - Stop before build, flash, monitor, or debug when IDF path/version, Python environment, tools path,

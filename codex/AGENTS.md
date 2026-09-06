@@ -1,47 +1,46 @@
 # Global Codex Instructions
 
-## Required Skill for ESP32 Work
+## Project Context First
 
-For any task whose subject is ESP32 or ESP-IDF, you MUST use the global Skill
-`esp32-ai-hardware-engineering` before analyzing, planning, implementing, debugging, reviewing,
-or answering technical questions.
+Read the closest project `AGENTS.md`, authoritative project documentation, board configuration,
+component identity, and relevant source before making changes or selecting documentation. Project
+rules refine these global routes. Keep machine-specific SDK paths, release numbers, document-library
+paths, and commit IDs out of reusable global instructions.
 
-This includes firmware and embedded C/C++, FreeRTOS, board/BSP integration, peripherals, audio,
-displays, cameras, power, networking, protocols, OTA/NVS/partitions, CMake/Kconfig, build, flash, debug,
-hardware validation, and documentation research involving datasheets, technical reference manuals,
-design guidelines, registers, pins, timing, or electrical characteristics.
+## Hardware Document Research
 
-Load the Skill from `%USERPROFILE%\.codex\skills\esp32-ai-hardware-engineering\SKILL.md`. Read the
-Skill reference matching the subsystem. For documentation or hardware facts, read
-`references/local-document-retrieval.md` and use the local `espdocs` workflow when healthy.
+For source-grounded facts about semiconductors or electronic components, you MUST use the global
+Skill `hardware-document-research`. This includes datasheets, technical reference manuals, errata,
+application notes, design guides, pins, packages, registers, electrical limits, timing, power, RF,
+and hardware integration.
 
-Also read the closest project `AGENTS.md`, authoritative project documentation, board
-configuration, and relevant source before making changes. Project rules refine this global rule.
+Resolve the exact part and revision rather than silently substituting a related device. For critical
+values, pins, registers, timing, safety behavior, tables, figures, and ambiguous extraction, inspect
+the hash-matched authoritative source locator. Generated Markdown and search snippets are locators,
+not final evidence.
 
-Resolve the project-required ESP-IDF revision from project documentation, CI, checked-in IDE
-configuration, or validated project-matching build metadata. Treat the current shell, EIM global
-selection, and newest installed SDK as fallback evidence only. Keep machine-specific SDK paths,
-release numbers, and commit IDs out of reusable global instructions.
+## ESP32 Engineering
 
-If the Skill or local knowledge CLI is unavailable, state that explicitly. For safety-critical or
-version-sensitive facts, inspect the authoritative original PDF rather than relying on memory,
-search snippets, or generated Markdown alone.
+For any ESP32 or ESP-IDF task, you MUST use the global Skill
+`esp32-ai-hardware-engineering` before analyzing, planning, implementing, debugging, reviewing, or
+answering technical questions. This covers firmware, embedded C/C++, FreeRTOS, board and peripheral
+integration, audio, networking, protocols, OTA, NVS, partitions, CMake, Kconfig, build, flash, debug,
+hardware validation, and ESP32 documentation research.
 
-Do not trigger this Skill for unrelated desktop, web, data, or generic C++ work without ESP32 or
-embedded-hardware context.
+Use the project-selected ESP-IDF revision and exact `IDF_TARGET`; ambient shell state, a global SDK
+selection, and the newest installed SDK are fallback evidence only. For ESP32 hardware-document
+facts, use both `esp32-ai-hardware-engineering` and `hardware-document-research`.
 
-## Required Skill for PDF Research
+Do not trigger the ESP32 Skill for unrelated desktop, web, data, or generic C++ work without ESP32
+or embedded-hardware context.
+
+## Document Format Processing
 
 For PDF reading, analysis, extraction, conversion, OCR, tables, figures, or reusable local document
-corpora, you MUST use the global Skill `docling-local-document-engineering`. It applies an adaptive
-route: trustworthy native text may use direct extraction, while scans, complex layout, or long
-documents use local Docling processing.
-
-Load the Skill from
-`%USERPROFILE%\.codex\skills\docling-local-document-engineering\SKILL.md`. Keep the original file and
-physical-page traceability. Critical facts, tables, figures, and ambiguous OCR must be checked against
-the hash-matched original PDF page.
+corpora, you MUST use `docling-local-document-engineering`. It chooses an adaptive native-text,
+layout, or OCR path and preserves physical-page traceability.
 
 Also use `pdf:pdf` for original-page rendering and visual inspection, forms, PDF creation or editing,
-and final layout QA. The Docling Skill complements rather than replaces that capability. Do not
-trigger Docling for a creation- or forms-only task that does not require reading source PDF content.
+and final layout QA. Do not trigger Docling for creation- or forms-only work that does not read PDF
+source content. For hardware research, Docling owns document processing while
+`hardware-document-research` owns part identity, source selection, and evidence decisions.

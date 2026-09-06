@@ -192,7 +192,3 @@ Stop and redesign when you see:
 - Shared protocol behavior copied into each transport.
 - Persistent keys or board identities renamed without migration.
 - A successful firmware build presented as proof of hardware behavior.
-
-## XiaoZhi Provenance
-
-These patterns were distilled from the local XiaoZhi snapshot at `%USERPROFILE%\Desktop\AI-HRADWARE\xiaozhi-esp32` (commit `8e2899d`). Use it as evidence and comparison material, not a drop-in template. The human-readable study is `%USERPROFILE%\Desktop\AI-HRADWARE\docs\architecture\xiaozhi-esp32-engineering-playbook.md`.
