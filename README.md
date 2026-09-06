@@ -13,8 +13,8 @@
 | PyTorch | CUDA 13.0 可用 |
 | ONNX Runtime | `CUDAExecutionProvider` 可用 |
 | Docling / RapidOCR | 2.120.1 / 3.9.2 |
-| 资料库 | 10 份文档，2697 个物理 PDF 页 |
-| 黄金集 | 23 条，top-5 原文定位召回率 100% |
+| 资料库 | 11 份文档，2750 个物理 PDF 页 |
+| 黄金集 | 24 条，top-5 原文定位召回率 100%，身份泄漏 0 |
 
 基线是本机快照，不替代 `doctor` 和 `verify` 的实时结果。
 
@@ -40,14 +40,17 @@ uv run espdocs doctor --json
 
 ## 文档来源
 
-允许的来源只在 `config/documents.toml` 中声明：
+允许的来源只在 `config/documents.toml` 中以明确的厂商、系列、精确型号、文档类型、语言和
+版本声明。当前包含：
 
 ```text
 %USERPROFILE%\Desktop\AI-HRADWARE\docs\ESP32-C3
 %USERPROFILE%\Desktop\AI-HRADWARE\docs\ESP32-S3
+%USERPROFILE%\Desktop\AI-HRADWARE\docs\PMIC\bq2407x.pdf
 ```
 
-发现逻辑只递归扫描这两个目录，未能按已审核文件名规则分类的 PDF 会报错，不会猜测类型。克隆到其他目录时，可把包含 `docs\ESP32-C3` 和 `docs\ESP32-S3` 的目录显式指定为来源基准：
+schema-v2 不从文件名猜测身份，也不会自动纳入同目录的其他 PDF。克隆到其他目录时，把包含
+这些相对路径的目录显式指定为来源基准：
 
 ```powershell
 $env:ESPDOCS_SOURCE_BASE = "D:\path\to\AI-HRADWARE"
@@ -145,20 +148,20 @@ Git 只跟踪代码、配置、测试、黄金定位案例和文档。PDF、语�
 
 ## Codex 集成
 
-仓库中的 `codex/AGENTS.md`、`skills/esp32-ai-hardware-engineering` 和
-`skills/docling-local-document-engineering` 是可版本化的 Codex 配置源。本机部署位置分别是：
+仓库中的 `codex/AGENTS.md` 和以下三个目录是可版本化的 Codex 配置源：
 
 ```text
+%USERPROFILE%\.codex\skills\hardware-document-research\
 %USERPROFILE%\.codex\skills\esp32-ai-hardware-engineering\
 %USERPROFILE%\.codex\skills\docling-local-document-engineering\
 %USERPROFILE%\.codex\AGENTS.md
 ```
 
-全局 `AGENTS.md` 要求 Codex 遇到 ESP32/ESP-IDF 的代码、资料查询、硬件参数、编译、
-烧录或调试任务时先加载该 Skill。涉及本地 PDF 时，Skill 会先使用 `espdocs` 定位，再按
-证据规则回到原 PDF。ESP-IDF API、Kconfig、构建、迁移和示例优先使用项目同版本的本地
-ESP-IDF 文档与源码：先解析项目确认的 IDF 根目录，再检查 `$env:IDF_PATH`，最后才把
-`C:\esp\v6.0.2\esp-idf` 作为 v6.0.2 的本机回退；版本不匹配时不得静默引用。
+`hardware-document-research` 负责器件身份、来源选择和证据门禁；
+`esp32-ai-hardware-engineering` 负责 ESP32/ESP-IDF 工程、版本匹配和架构约束；
+`docling-local-document-engineering` 负责 PDF 原生文本、版面、OCR 和可复用语料处理。
+涉及 ESP-IDF API、Kconfig、构建、迁移和示例时，先从项目文档、CI 或配置解析所需版本，
+再验证 `$env:IDF_PATH` 和该版本一致；不得使用固定机器路径或静默引用其他版本。
 
 新的 Docling Skill 是 PDF 阅读和资料工程的默认入口。它对短小、结构简单且原生文本可靠
 的 PDF 使用轻量提取，对扫描件、复杂表格/图片、多栏和长文档使用本地 Docling；关键证据
@@ -172,17 +175,41 @@ docling --version
 ```
 
 要复现本仓库带 CUDA、RapidOCR 和 ESPDocs 的固定环境，使用前文的 `uv sync --dev`，不要
-用通用 tool 环境替代项目 `.venv`。安装匹配的 ESP-IDF 后，在其导出终端中设置 `IDF_PATH`，
-再从仓库根目录部署两个 Skill 和全局规则：
+用通用 tool 环境替代项目 `.venv`。跨机器使用时，以 Windows 用户变量配置仓库根目录、
+原始文档根目录和生成数据根目录：
 
 ```powershell
+[Environment]::SetEnvironmentVariable(
+    "ESP_HARDWARE_KNOWLEDGE_ROOT", "D:\path\to\esp-hardware-knowledge", "User"
+)
+[Environment]::SetEnvironmentVariable(
+    "ESPDOCS_SOURCE_BASE", "D:\path\to\hardware-library", "User"
+)
+[Environment]::SetEnvironmentVariable(
+    "ESPDOCS_DATA_ROOT", "D:\path\to\espdocs-data", "User"
+)
+```
+
+安装匹配的 ESP-IDF 后，在其已验证环境中设置 `IDF_PATH`。部署前先从仓库根目录执行只读
+检查；`-Check` 不创建目录或修改文件，目标缺失、不一致或 manifest 缺失时返回非零：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-codex-assets.ps1 -Check
 powershell -ExecutionPolicy Bypass -File .\scripts\install-codex-assets.ps1
 ```
 
 默认目标为 `$env:CODEX_HOME`，未设置时使用 `%USERPROFILE%\.codex`。测试其他目录或使用
-自定义 Codex Home 时传入 `-CodexHome D:\path\to\.codex`。安装器只替换本仓库管理的两个
-同名 Skill 和全局 `AGENTS.md`，不会删除其他 Skill。PDF、语料、SQLite、模型缓存和渲染
-页面仍保存在本机，不随 Git 同步。当前仓库不包含 Claude Code、OpenCode 或 Hermes 适配。
+自定义 Codex Home 时传入 `-CodexHome D:\path\to\.codex`。安装器先验证三个源 Skill，
+对比当前源、目标和上次部署 manifest，只更新未被本地修改的受管文件；任一步失败都会恢复
+先前的完整受管集合。目标漂移默认拒绝覆盖，只有确认目标改动已合并回仓库后才使用：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-codex-assets.ps1 -Force
+```
+
+部署记录位于 `%CODEX_HOME%\managed\esp-hardware-knowledge-assets.json`，包含受管相对路径与
+SHA-256。安装器只替换三个同名 Skill 和全局 `AGENTS.md`，不会删除其他 Skill。PDF、语料、
+SQLite、模型缓存和渲染页面仍保存在本机，不随 Git 同步。
 
 ## JSON 与错误处理
 

@@ -116,13 +116,18 @@ def test_codex_agents_routes_pdf_research_without_owning_pdf_authoring() -> None
     assert "forms" in text.casefold()
 
 
-def test_portable_codex_installer_manages_both_skills() -> None:
+def test_portable_codex_installer_manages_all_skills_safely() -> None:
     text = (REPO_ROOT / "scripts" / "install-codex-assets.ps1").read_text(encoding="utf-8")
 
     assert "CodexHome" in text
+    assert "ValidatorPath" in text
+    assert "hardware-document-research" in text
     assert "esp32-ai-hardware-engineering" in text
     assert "docling-local-document-engineering" in text
     assert "AGENTS.md" in text
+    assert "esp-hardware-knowledge-assets.json" in text
+    assert "$Check" in text
+    assert "$Force" in text
 
 
 def test_readme_documents_cross_machine_codex_setup() -> None:
@@ -132,6 +137,10 @@ def test_readme_documents_cross_machine_codex_setup() -> None:
     assert "uv tool install docling" in text
     assert "IDF_PATH" in text
     assert "docling-local-document-engineering" in text
+    assert "hardware-document-research" in text
+    assert "-Check" in text
+    assert "-Force" in text
+    assert "esp-hardware-knowledge-assets.json" in text
 
 
 def test_hardware_research_skill_has_portable_exact_source_contract() -> None:
