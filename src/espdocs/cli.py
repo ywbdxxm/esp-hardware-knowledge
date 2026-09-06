@@ -14,14 +14,18 @@ import typer
 
 from espdocs.catalog import discover_documents, load_source_roots
 from espdocs.config import AppPaths
-from espdocs.gpu import gpu_status
 from espdocs.index import build_index, supports_trigram
-from espdocs.ingest import ingest_document
 from espdocs.models import ReadinessReport
 from espdocs.retrieval import RetrievalError, SearchService, get_indexed_page
 from espdocs.source import SourceError, render_source_page
 
 app = typer.Typer(no_args_is_help=True, help="Local, source-traceable ESP documentation")
+
+
+def gpu_status():
+    from espdocs.gpu import gpu_status as inspect_gpu
+
+    return inspect_gpu()
 
 
 def _jsonable(value: Any) -> Any:
@@ -118,6 +122,8 @@ def ingest(
                 json_output,
             )
             return
+        from espdocs.ingest import ingest_document
+
         paths.ensure_runtime_dirs()
         results = [ingest_document(record, None, paths.corpus_dir) for record in records]
         index_result = build_index(paths.corpus_dir, paths.index_path)

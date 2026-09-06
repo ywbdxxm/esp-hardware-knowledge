@@ -1,4 +1,6 @@
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pymupdf
@@ -89,6 +91,30 @@ def test_help_lists_all_commands() -> None:
     assert result.exit_code == 0
     for command in ("ingest", "inventory", "search", "show", "source", "doctor", "verify"):
         assert command in result.stdout
+
+
+def test_read_only_cli_import_does_not_load_ingestion_dependencies() -> None:
+    probe = """
+import sys
+import espdocs.cli
+
+heavy = sorted(
+    name
+    for name in ("docling", "onnxruntime", "torch")
+    if name in sys.modules
+)
+raise SystemExit(f"eager imports: {heavy}" if heavy else 0)
+"""
+
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
 
 
 def test_search_json_includes_traceability(cli_runtime: dict[str, Path]) -> None:
