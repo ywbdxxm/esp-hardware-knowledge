@@ -12,6 +12,7 @@ from typing import Any, Protocol
 
 from espdocs.config import AppPaths
 from espdocs.markdown import local_image_reference_errors
+from espdocs.models import DocumentIdentity, SourceLocator
 from espdocs.retrieval import SearchService
 
 
@@ -23,18 +24,34 @@ class EvaluationError(RuntimeError):
 class GoldenCase:
     case_id: str
     query: str
-    chip: str
     document_type: str | None
     expected_filename: str
     page_min: int
     page_max: int
     requires_source_check: bool
+    chip: str | None = None
+    vendor: str | None = None
+    family: str | None = None
+    part: str | None = None
+
+    def __post_init__(self) -> None:
+        identity = (self.vendor, self.family, self.part)
+        if self.chip is not None and not any(identity):
+            object.__setattr__(self, "vendor", "espressif")
+            object.__setattr__(self, "family", "esp32")
+            object.__setattr__(self, "part", self.chip)
+            return
+        if self.chip is None and all(identity):
+            return
+        raise ValueError("golden case requires either legacy chip or exact vendor/family/part")
 
 
 class SearchHit(Protocol):
     chip: str
+    identity: DocumentIdentity | None
     source_path: Path
     pdf_page: int
+    locator: SourceLocator | None
     requires_source_check: bool
 
 
@@ -42,6 +59,7 @@ class SearchHit(Protocol):
 class CaseDiagnostic:
     case_id: str
     source_hit: bool
+    identity_leakage: bool
     chip_leakage: bool
     source_check_ok: bool
 
@@ -51,6 +69,7 @@ class EvaluationReport:
     total_cases: int
     source_hits: int
     top5_recall: float
+    identity_leakage: int
     chip_leakage: int
     source_check_failures: int
     sufficient_cases: bool
@@ -69,10 +88,16 @@ def _parse_case(payload: dict[str, Any], line_no: int) -> GoldenCase:
             or page_range[1] < page_range[0]
         ):
             raise ValueError("pdf_pages must be an increasing [first, last] pair")
+        has_legacy_chip = "chip" in payload
+        identity_keys = ("vendor", "family", "part")
+        identity_fields = tuple(key in payload for key in identity_keys)
+        if has_legacy_chip == any(identity_fields) or (
+            any(identity_fields) and not all(identity_fields)
+        ):
+            raise ValueError("use either legacy chip or exact vendor/family/part")
         return GoldenCase(
             case_id=str(payload["id"]),
             query=str(payload["query"]),
-            chip=str(payload["chip"]),
             document_type=(
                 str(payload["document_type"]) if payload.get("document_type") is not None else None
             ),
@@ -80,6 +105,10 @@ def _parse_case(payload: dict[str, Any], line_no: int) -> GoldenCase:
             page_min=page_range[0],
             page_max=page_range[1],
             requires_source_check=bool(payload["requires_source_check"]),
+            chip=str(payload["chip"]).strip().casefold() if has_legacy_chip else None,
+            vendor=str(payload["vendor"]).strip().casefold() if all(identity_fields) else None,
+            family=str(payload["family"]).strip().casefold() if all(identity_fields) else None,
+            part=str(payload["part"]).strip().casefold() if all(identity_fields) else None,
         )
     except (KeyError, TypeError, ValueError) as error:
         raise EvaluationError(
@@ -114,40 +143,65 @@ def evaluate(
 ) -> EvaluationReport:
     diagnostics: list[CaseDiagnostic] = []
     source_hits = 0
-    chip_leakage = 0
+    identity_leakage = 0
     source_check_failures = 0
     for case in cases:
         results = list(search(case))[:5]
-        leaked = any(result.chip != case.chip for result in results)
+        leaked = any(not _identity_matches(case, result) for result in results)
         correct = [
             result
             for result in results
-            if result.chip == case.chip
+            if _identity_matches(case, result)
             and result.source_path.name.casefold() == case.expected_filename.casefold()
-            and case.page_min <= result.pdf_page <= case.page_max
+            and case.page_min <= _physical_page(result) <= case.page_max
         ]
         source_hit = bool(correct)
         source_check_ok = not correct or any(
             result.requires_source_check == case.requires_source_check for result in correct
         )
         source_hits += int(source_hit)
-        chip_leakage += int(leaked)
+        identity_leakage += int(leaked)
         source_check_failures += int(not source_check_ok)
-        diagnostics.append(CaseDiagnostic(case.case_id, source_hit, leaked, source_check_ok))
+        diagnostics.append(
+            CaseDiagnostic(case.case_id, source_hit, leaked, leaked, source_check_ok)
+        )
     total = len(cases)
     recall = source_hits / total if total else 0.0
     sufficient = total >= 20
-    passed = sufficient and recall >= 0.95 and chip_leakage == 0 and source_check_failures == 0
+    passed = (
+        sufficient
+        and recall >= 0.95
+        and identity_leakage == 0
+        and source_check_failures == 0
+    )
     return EvaluationReport(
         total_cases=total,
         source_hits=source_hits,
         top5_recall=recall,
-        chip_leakage=chip_leakage,
+        identity_leakage=identity_leakage,
+        chip_leakage=identity_leakage,
         source_check_failures=source_check_failures,
         sufficient_cases=sufficient,
         passed=passed,
         cases=tuple(diagnostics),
     )
+
+
+def _identity_matches(case: GoldenCase, result: SearchHit) -> bool:
+    identity = getattr(result, "identity", None)
+    if identity is None:
+        chip = getattr(result, "chip", None)
+        vendor, family, parts = "espressif", "esp32", (chip,)
+    else:
+        vendor, family, parts = identity.vendor, identity.family, identity.parts
+    return vendor == case.vendor and family == case.family and case.part in parts
+
+
+def _physical_page(result: SearchHit) -> int:
+    locator = getattr(result, "locator", None)
+    if locator is not None and locator.physical_page is not None:
+        return locator.physical_page
+    return result.pdf_page
 
 
 def _corpus_health(corpus_dir: Path) -> tuple[int, int, list[str]]:
@@ -194,7 +248,9 @@ def verify_runtime(paths: AppPaths) -> tuple[dict[str, Any], bool]:
         cases,
         search=lambda case: service.search(
             case.query,
-            chip=case.chip,
+            vendor=case.vendor,
+            family=case.family,
+            part=case.part,
             document_type=case.document_type,
             limit=5,
         ),

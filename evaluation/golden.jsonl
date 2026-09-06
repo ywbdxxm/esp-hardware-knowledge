@@ -21,3 +21,4 @@
 {"id":"s3-datasheet-electrical-characteristics","query":"电气特性","chip":"esp32-s3","document_type":"datasheet","expected_filename":"esp32-s3_datasheet_cn.pdf","pdf_pages":[61,62],"requires_source_check":true}
 {"id":"s3-module-usb-otg","query":"USB OTG","chip":"esp32-s3","document_type":"module_datasheet","expected_filename":"esp32-s3-mini-1_mini-1u_datasheet_cn.pdf","pdf_pages":[20,20],"requires_source_check":true}
 {"id":"s3-guidelines-usb-otg","query":"USB OTG","chip":"esp32-s3","document_type":"hardware_design_guidelines","expected_filename":"esp-hardware-design-guidelines-zh_CN-master-esp32s3.pdf","pdf_pages":[6,6],"requires_source_check":true}
+{"id":"bq2407x-iset-programming","query":"charge current translator","vendor":"texas-instruments","family":"bq2407x","part":"bq24075","document_type":"datasheet","expected_filename":"bq2407x.pdf","pdf_pages":[25,25],"requires_source_check":true}

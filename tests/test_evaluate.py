@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from espdocs.evaluate import EvaluationError, GoldenCase, _corpus_health, evaluate, load_cases
+from espdocs.models import DocumentIdentity, SourceLocator
 
 
 def make_cases(count: int = 20) -> list[GoldenCase]:
@@ -34,6 +35,30 @@ def hit(case: GoldenCase, *, chip: str | None = None, source_check: bool | None 
     )
 
 
+def identity_hit(
+    case: GoldenCase,
+    *,
+    vendor: str | None = None,
+    family: str | None = None,
+    part: str | None = None,
+):
+    return SimpleNamespace(
+        identity=DocumentIdentity(
+            vendor=vendor or case.vendor,
+            family=family or case.family,
+            parts=(part or case.part,),
+            variant=None,
+            document_type=case.document_type or "datasheet",
+            language="zh-cn",
+            document_revision="test",
+        ),
+        source_path=Path(case.expected_filename),
+        pdf_page=case.page_min,
+        locator=SourceLocator("pdf", "pdf_page", case.page_min, None),
+        requires_source_check=case.requires_source_check,
+    )
+
+
 def test_evaluation_accepts_95_percent_top_five_recall() -> None:
     cases = make_cases()
 
@@ -52,6 +77,28 @@ def test_evaluation_rejects_chip_leakage_even_with_correct_hit() -> None:
     report = evaluate(cases, search=lambda case: [hit(case), hit(case, chip="esp32-s3")])
 
     assert report.chip_leakage == 20
+    assert report.identity_leakage == 20
+    assert report.passed is False
+
+
+def test_evaluation_rejects_part_leakage_even_with_correct_hit() -> None:
+    case = GoldenCase(
+        case_id="bq2407x-iset-programming",
+        query="fast charge current ISET resistor",
+        vendor="texas-instruments",
+        family="bq2407x",
+        part="bq24075",
+        document_type="datasheet",
+        expected_filename="bq2407x.pdf",
+        page_min=25,
+        page_max=25,
+        requires_source_check=True,
+    )
+    leaked = identity_hit(case, family="esp32", part="esp32-c3")
+
+    report = evaluate([case] * 20, search=lambda _: [identity_hit(case), leaked])
+
+    assert report.identity_leakage == 20
     assert report.passed is False
 
 
@@ -102,6 +149,57 @@ def test_load_cases_reads_page_range(tmp_path: Path) -> None:
     case = load_cases(path)[0]
 
     assert (case.page_min, case.page_max) == (10, 12)
+    assert (case.vendor, case.family, case.part) == ("espressif", "esp32", "esp32-c3")
+
+
+def test_load_cases_reads_exact_hardware_identity(tmp_path: Path) -> None:
+    path = tmp_path / "golden.jsonl"
+    path.write_text(
+        json.dumps(
+            {
+                "id": "bq2407x-iset-programming",
+                "query": "fast charge current ISET resistor",
+                "vendor": "texas-instruments",
+                "family": "bq2407x",
+                "part": "bq24075",
+                "document_type": "datasheet",
+                "expected_filename": "bq2407x.pdf",
+                "pdf_pages": [25, 25],
+                "requires_source_check": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    case = load_cases(path)[0]
+
+    assert case.chip is None
+    assert (case.vendor, case.family, case.part) == (
+        "texas-instruments",
+        "bq2407x",
+        "bq24075",
+    )
+
+
+def test_load_cases_rejects_partial_hardware_identity(tmp_path: Path) -> None:
+    path = tmp_path / "golden.jsonl"
+    path.write_text(
+        json.dumps(
+            {
+                "id": "partial-identity",
+                "query": "ISET",
+                "vendor": "texas-instruments",
+                "document_type": "datasheet",
+                "expected_filename": "bq2407x.pdf",
+                "pdf_pages": [25, 25],
+                "requires_source_check": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(EvaluationError, match="line 1"):
+        load_cases(path)
 
 
 def test_corpus_health_reports_broken_local_image_reference(tmp_path: Path) -> None:
