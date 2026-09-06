@@ -120,6 +120,7 @@ path = "docs/ESP32-C3/esp32-c3_datasheet_cn.pdf"
 vendor = "Espressif"
 family = "ESP32"
 parts = ["ESP32-C3"]
+compatibility_chip = "ESP32-C3"
 document_type = "Datasheet"
 language = "zh-CN"
 document_revision = "unknown"
@@ -143,11 +144,46 @@ document_revision = "ZHCSIF0N"
     assert sources[0].vendor == "espressif"
     assert sources[0].family == "esp32"
     assert sources[0].parts == ("esp32-c3",)
+    assert sources[0].chip == "esp32-c3"
     assert sources[0].language == "zh-cn"
     assert sources[1].vendor == "texas-instruments"
     assert sources[1].family == "bq2407x"
     assert sources[1].parts[-2] == "bq24075"
     assert sources[1].document_revision == "ZHCSIF0N"
+
+
+def test_schema_v2_keeps_module_part_distinct_from_compatibility_chip(
+    monkeypatch, tmp_path: Path
+) -> None:
+    hardware = tmp_path / "hardware-library"
+    write_pdf(hardware / "docs" / "ESP32-C3" / "esp32-c3-wroom-02_datasheet_cn.pdf")
+    repo = tmp_path / "repo"
+    config = repo / "config" / "documents.toml"
+    config.parent.mkdir(parents=True)
+    config.write_text(
+        """
+schema_version = 2
+
+[[documents]]
+path = "docs/ESP32-C3/esp32-c3-wroom-02_datasheet_cn.pdf"
+vendor = "espressif"
+family = "esp32"
+parts = ["esp32-c3-wroom-02"]
+compatibility_chip = "esp32-c3"
+document_type = "module_datasheet"
+language = "zh-CN"
+document_revision = "unknown"
+""".strip(),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("ESPDOCS_SOURCE_BASE", str(hardware))
+
+    source = load_source_roots(config, repo_root=repo)[0]
+    record = discover_documents([source])[0]
+
+    assert source.chip == "esp32-c3"
+    assert record.chip == "esp32-c3"
+    assert record.identity and record.identity.parts == ("esp32-c3-wroom-02",)
 
 
 @pytest.mark.parametrize(

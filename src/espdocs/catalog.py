@@ -142,7 +142,7 @@ def load_source_roots(config_path: Path, repo_root: Path) -> list[SourceRoot]:
         "language",
         "document_revision",
     }
-    allowed = required | {"variant", "source_format"}
+    allowed = required | {"variant", "source_format", "compatibility_chip"}
     relative_paths: list[Path] = []
     for entry in entries:
         if not isinstance(entry, dict) or not required <= set(entry) or not set(entry) <= allowed:
@@ -162,9 +162,16 @@ def load_source_roots(config_path: Path, repo_root: Path) -> list[SourceRoot]:
     for entry, relative_path in zip(entries, relative_paths, strict=True):
         parts = tuple(_normalize(part) for part in entry["parts"])
         family = _normalize(str(entry["family"]))
+        compatibility_chip = entry.get("compatibility_chip")
         roots.append(
             SourceRoot(
-                chip=parts[0] if len(parts) == 1 else family,
+                chip=(
+                    _normalize(str(compatibility_chip))
+                    if compatibility_chip is not None
+                    else parts[0]
+                    if len(parts) == 1
+                    else family
+                ),
                 path=(base / relative_path).resolve(),
                 vendor=_normalize(str(entry["vendor"])),
                 family=family,
