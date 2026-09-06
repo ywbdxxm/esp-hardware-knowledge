@@ -45,6 +45,15 @@ class EvidenceDecision:
 
 
 @dataclass(frozen=True)
+class ReadinessReport:
+    query: bool
+    source: bool
+    ingest: bool
+    verify_recommended: bool
+    reasons: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class SearchResult:
     page_id: int
     document_id: str

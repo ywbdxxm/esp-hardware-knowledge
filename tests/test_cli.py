@@ -192,6 +192,48 @@ def test_doctor_is_unhealthy_when_default_cuda_is_unavailable(
     assert payload["gpu"]["selected_device"] == "unavailable"
 
 
+def test_doctor_keeps_existing_index_queryable_without_cuda(
+    cli_runtime: dict[str, Path], monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        cli_module,
+        "gpu_status",
+        lambda: GpuStatus(
+            ready=False,
+            torch_cuda=False,
+            torch_cuda_version=None,
+            onnx_cuda=False,
+            onnx_providers=("CPUExecutionProvider",),
+            device_name=None,
+            memory_mib=None,
+        ),
+    )
+
+    result = CliRunner().invoke(app, ["doctor", "--json"])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 0
+    assert payload["readiness"]["query"] is True
+    assert payload["readiness"]["source"] is True
+    assert payload["readiness"]["ingest"] is False
+    assert "cuda_unavailable" in payload["readiness"]["reasons"]
+
+
+def test_doctor_reports_missing_index_as_query_unready(
+    cli_runtime: dict[str, Path]
+) -> None:
+    cli_runtime["database"].unlink()
+
+    result = CliRunner().invoke(app, ["doctor", "--json"])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 0
+    assert payload["readiness"]["query"] is False
+    assert payload["readiness"]["ingest"] is True
+    assert payload["readiness"]["verify_recommended"] is True
+    assert "missing_index" in payload["readiness"]["reasons"]
+
+
 def test_ingest_dry_run_does_not_convert(cli_runtime: dict[str, Path]) -> None:
     result = CliRunner().invoke(app, ["ingest", "--dry-run", "--json"])
     payload = json.loads(result.stdout)

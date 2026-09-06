@@ -17,6 +17,7 @@ from espdocs.config import AppPaths
 from espdocs.gpu import gpu_status
 from espdocs.index import build_index, supports_trigram
 from espdocs.ingest import ingest_document
+from espdocs.models import ReadinessReport
 from espdocs.retrieval import RetrievalError, SearchService, get_indexed_page
 from espdocs.source import SourceError, render_source_page
 
@@ -210,11 +211,28 @@ def doctor(
             "sqlite": sqlite3.sqlite_version,
             "fts5_trigram": trigram,
         }
+        sources_ready = all(root.path.is_dir() for root in roots)
+        index_exists = paths.index_path.is_file()
+        readiness_reasons: list[str] = []
+        if not trigram:
+            readiness_reasons.append("fts5_trigram_unavailable")
+        if not index_exists:
+            readiness_reasons.append("missing_index")
+        if not sources_ready:
+            readiness_reasons.append("missing_source")
+        if not accelerator_healthy:
+            readiness_reasons.append("cuda_unavailable")
+        readiness = ReadinessReport(
+            query=trigram and index_exists,
+            source=sources_ready,
+            ingest=accelerator_healthy and sources_ready,
+            verify_recommended=not index_exists,
+            reasons=tuple(readiness_reasons),
+        )
         payload = {
             "schema_version": 1,
-            "healthy": (
-                trigram and accelerator_healthy and all(root.path.is_dir() for root in roots)
-            ),
+            "healthy": trigram and accelerator_healthy and sources_ready,
+            "readiness": readiness,
             "components": components,
             "gpu": {
                 "requested_device": requested_device,
@@ -234,7 +252,7 @@ def doctor(
             "runtime": {
                 "data_root": paths.data_root,
                 "index_path": paths.index_path,
-                "index_exists": paths.index_path.is_file(),
+                "index_exists": index_exists,
             },
         }
         _emit(payload, json_output)
