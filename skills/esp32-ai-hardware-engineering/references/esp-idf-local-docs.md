@@ -1,15 +1,18 @@
 # Local ESP-IDF Documentation
 
 Use documentation and source from the same ESP-IDF revision as the project. Establish both the
-version and `IDF_TARGET` before applying target-conditional content.
+revision and `IDF_TARGET` before applying target-conditional content.
 
 ## Resolve the IDF Root
 
 Resolve in this order:
 
-1. The IDF root confirmed by the project environment, build files, or build output.
-2. `$env:IDF_PATH` when it matches the project version.
-3. This machine's known fallback `C:\esp\v6.0.2\esp-idf`, only for ESP-IDF v6.0.2.
+1. The IDF root or revision explicitly required by the task, project documentation, CI, or
+   checked-in IDE configuration.
+2. A project-matching root recorded by validated build metadata.
+3. `$env:IDF_PATH` when its checkout agrees with the higher-priority project evidence.
+4. A bounded inventory of registered or installed IDF checkouts as candidates when the project has
+   not already identified a root.
 
 Record the git describe result and commit for the selected root:
 
@@ -19,10 +22,8 @@ git -C $idfRoot describe --tags --always --dirty
 git -C $idfRoot rev-parse HEAD
 ```
 
-The known fallback is tag `v6.0.2`, commit
-`7101770dc6db2667b3c477cc31365dd1acd6db4e`. If the project uses another revision, report the
-version mismatch and locate matching local or official Espressif documentation. Never silently
-answer from v6.0.2.
+If no local checkout matches the required revision, report the mismatch and locate matching official
+Espressif documentation or source. Never silently answer from a different installed checkout.
 
 ## Search the Source Documentation
 

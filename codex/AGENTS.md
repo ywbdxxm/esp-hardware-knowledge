@@ -18,6 +18,11 @@ Skill reference matching the subsystem. For documentation or hardware facts, rea
 Also read the closest project `AGENTS.md`, authoritative project documentation, board
 configuration, and relevant source before making changes. Project rules refine this global rule.
 
+Resolve the project-required ESP-IDF revision from project documentation, CI, checked-in IDE
+configuration, or validated project-matching build metadata. Treat the current shell, EIM global
+selection, and newest installed SDK as fallback evidence only. Keep machine-specific SDK paths,
+release numbers, and commit IDs out of reusable global instructions.
+
 If the Skill or local knowledge CLI is unavailable, state that explicitly. For safety-critical or
 version-sensitive facts, inspect the authoritative original PDF rather than relying on memory,
 search snippets, or generated Markdown alone.

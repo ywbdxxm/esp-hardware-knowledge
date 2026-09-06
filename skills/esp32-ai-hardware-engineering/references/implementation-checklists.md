@@ -3,17 +3,19 @@
 ## Contents
 
 1. [Context and Baseline](#1-context-and-baseline)
-2. [Architecture and Concurrency](#2-architecture-and-concurrency)
-3. [Board or BSP Changes](#3-board-or-bsp-changes)
-4. [Audio Changes](#4-audio-changes)
-5. [Protocol and MCP Changes](#5-protocol-and-mcp-changes)
-6. [NVS, OTA, Partitions, and Assets](#6-nvs-ota-partitions-and-assets)
-7. [Kconfig, CMake, and Build Matrix](#7-kconfig-cmake-and-build-matrix)
-8. [Implementation Review](#8-implementation-review)
-9. [Verification Ladder](#9-verification-ladder)
-10. [Completion Report](#10-completion-report)
+2. [ESP-IDF Tooling Environment](#2-esp-idf-tooling-environment)
+3. [Architecture and Concurrency](#3-architecture-and-concurrency)
+4. [Board or BSP Changes](#4-board-or-bsp-changes)
+5. [Audio Changes](#5-audio-changes)
+6. [Protocol and MCP Changes](#6-protocol-and-mcp-changes)
+7. [NVS, OTA, Partitions, and Assets](#7-nvs-ota-partitions-and-assets)
+8. [Kconfig, CMake, and Build Matrix](#8-kconfig-cmake-and-build-matrix)
+9. [Implementation Review](#9-implementation-review)
+10. [Verification Ladder](#10-verification-ladder)
+11. [Completion Report](#11-completion-report)
 
-Use only the sections relevant to the current task, plus Context, Implementation Review, Verification Ladder, and Completion Report.
+Use only the sections relevant to the current task, plus Context, ESP-IDF Tooling Environment when
+running SDK tools, Implementation Review, Verification Ladder, and Completion Report.
 
 ## 1. Context and Baseline
 
@@ -26,7 +28,24 @@ Use only the sections relevant to the current task, plus Context, Implementation
 - [ ] Run the smallest relevant baseline test/build before changing behavior.
 - [ ] State which physical board and instruments are available.
 
-## 2. Architecture and Concurrency
+## 2. ESP-IDF Tooling Environment
+
+- [ ] On Windows, read `windows-esp-idf-environment.md` before any ESP-IDF-managed command.
+- [ ] Record project-required IDF path/version and `IDF_TARGET`, including conflicting evidence.
+- [ ] Classify the installation as EIM, standard ESP-IDF tools, or an explicit project/CI wrapper.
+- [ ] When EIM-managed, select the exact registry entry and its version-specific `activationScript`.
+- [ ] Do not substitute the checkout's `export.ps1` for an EIM activation profile.
+- [ ] Keep uv/general Python separate from the ESP-IDF-managed environment.
+- [ ] Prefer a fresh child PowerShell and run activation plus dependent commands in that process.
+- [ ] Verify canonical `IDF_PATH`, `idf.py --version`, `IDF_TOOLS_PATH`, and
+  `IDF_PYTHON_ENV_PATH` before build, flash, monitor, or debug.
+- [ ] Verify `sys.executable` belongs to `IDF_PYTHON_ENV_PATH` and inspect duplicate commands with
+  `Get-Command -All` when necessary.
+- [ ] Verify the selected target compiler, CMake, and Ninja resolve from the same installation tuple.
+- [ ] Compare reusable build metadata with the validated IDF, Python, target, and compiler.
+- [ ] Stop on unresolved mismatch; do not install tools or packages until installation ownership is known.
+
+## 3. Architecture and Concurrency
 
 - [ ] Name the narrowest owning module for the change.
 - [ ] Name the sole writer for every changed device-level state.
@@ -41,7 +60,7 @@ Use only the sections relevant to the current task, plus Context, Implementation
 - [ ] Define shutdown order and wake every blocked task/condition variable.
 - [ ] Add counters for queue drops, high-water marks, timeouts, and recovery.
 
-## 3. Board or BSP Changes
+## 4. Board or BSP Changes
 
 - [ ] Add a unique board or release variant when pins/hardware identity differ.
 - [ ] Do not change an existing board's pins to support unrelated hardware.
@@ -56,7 +75,7 @@ Use only the sections relevant to the current task, plus Context, Implementation
 - [ ] Preserve board identity used by OTA/backend compatibility.
 - [ ] Document wiring, flash size, partitions, and canonical build command.
 
-## 4. Audio Changes
+## 5. Audio Changes
 
 - [ ] Draw capture -> preprocess -> encode -> transport -> decode -> playback.
 - [ ] Express buffer capacity as milliseconds and calculate memory cost.
@@ -71,7 +90,7 @@ Use only the sections relevant to the current task, plus Context, Implementation
 - [ ] Test capture, playback, wake word, VAD, interruption, reconnect, and all applicable AEC modes.
 - [ ] Listen for clipping, underrun, repeated frames, stale playback, and acoustic feedback on hardware.
 
-## 5. Protocol and MCP Changes
+## 6. Protocol and MCP Changes
 
 - [ ] Put shared message meaning in the protocol layer, not a transport implementation.
 - [ ] Verify every affected transport, including WebSocket and MQTT/UDP where present.
@@ -86,7 +105,7 @@ Use only the sections relevant to the current task, plus Context, Implementation
 - [ ] Return structured errors without leaking credentials or unsafe internals.
 - [ ] Test malformed, oversized, missing, unknown, duplicate, and stale-session messages.
 
-## 6. NVS, OTA, Partitions, and Assets
+## 7. NVS, OTA, Partitions, and Assets
 
 - [ ] Treat NVS namespace/key names as persistent API.
 - [ ] Add schema version and migration for renamed or retyped settings.
@@ -100,7 +119,7 @@ Use only the sections relevant to the current task, plus Context, Implementation
 - [ ] Test missing, corrupt, older, and newer asset partitions.
 - [ ] Confirm factory reset behavior for configuration, credentials, identity, and assets separately.
 
-## 7. Kconfig, CMake, and Build Matrix
+## 8. Kconfig, CMake, and Build Matrix
 
 - [ ] Guard target-specific code with Kconfig and component requirements.
 - [ ] Keep defaults in one authoritative place and validate user overrides.
@@ -113,7 +132,7 @@ Use only the sections relevant to the current task, plus Context, Implementation
 - [ ] Record the exact SDK environment and canonical build command.
 - [ ] Do not assume a reused build directory still represents the previous target.
 
-## 8. Implementation Review
+## 9. Implementation Review
 
 - [ ] The patch changes only the narrowest owning layer.
 - [ ] No board-specific condition leaked into core code.
@@ -126,7 +145,7 @@ Use only the sections relevant to the current task, plus Context, Implementation
 - [ ] Compatibility changes include migrations or explicit release boundaries.
 - [ ] Tests cover invariants and failure modes, not only implementation details.
 
-## 9. Verification Ladder
+## 10. Verification Ladder
 
 Run the highest applicable layers; do not collapse their meaning.
 
@@ -140,7 +159,7 @@ Run the highest applicable layers; do not collapse their meaning.
 
 For every command record exact result, warnings, skipped cases, and environment. A test cleanup error is not a pass; a compile is not a functional hardware test.
 
-## 10. Completion Report
+## 11. Completion Report
 
 Report:
 

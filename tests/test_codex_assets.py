@@ -46,14 +46,26 @@ def test_esp32_skill_uses_version_matched_local_idf_documentation() -> None:
 
     assert "esp-idf-local-docs.md" in skill
     assert "$env:IDF_PATH" in reference
-    assert r"C:\esp\v6.0.2\esp-idf" in reference
+    assert r"C:\esp\v6.0.2\esp-idf" not in reference
     assert "IDF_TARGET" in reference
     assert "git describe" in reference
     assert "only::" in reference
     assert "include-build-file" in reference
-    assert "version mismatch" in reference.casefold()
+    assert "report the mismatch" in reference.casefold()
     assert "component header" in reference.casefold()
     assert "original pdf" in reference.casefold()
+
+
+def test_canonical_esp32_skill_contains_deployed_environment_rules() -> None:
+    skill = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+    local_docs = (
+        SKILL_ROOT / "references" / "local-document-retrieval.md"
+    ).read_text(encoding="utf-8")
+
+    assert "windows-esp-idf-environment.md" in skill
+    assert "uv run --locked --project" in local_docs
+    assert "Desktop\\AI-HRADWARE" not in local_docs
+    assert (SKILL_ROOT / "references" / "windows-esp-idf-environment.md").is_file()
 
 
 def test_docling_skill_routes_pdf_research_adaptively() -> None:

@@ -281,6 +281,10 @@ Resolution precedence is:
 Skills contain none of these absolute paths. A single maintained launcher resolves the ESPDocs
 project and invokes its locked environment from any current working directory.
 
+`ESP_HARDWARE_KNOWLEDGE_ROOT` is the sole explicit environment variable for the ESPDocs repository
+root. Do not introduce a second repository-root variable. `ESPDOCS_SOURCE_BASE` and
+`ESPDOCS_DATA_ROOT` remain the separate source-library and generated-runtime overrides.
+
 ## Source and Locator Model
 
 PDF remains the first fully supported format. The general contract must not assume that every source

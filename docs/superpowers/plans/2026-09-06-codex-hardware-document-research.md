@@ -787,10 +787,9 @@ source locator; generated text is a locator rather than final evidence.
 
 `invoke-espdocs.ps1` resolves in this order:
 
-1. process-level `ESPDOCS_PROJECT_ROOT`;
-2. user-level `ESPDOCS_PROJECT_ROOT`;
-3. process- or user-level legacy `ESP_HARDWARE_KNOWLEDGE_ROOT` during compatibility;
-4. a bounded current-directory/ancestor candidate containing `pyproject.toml`, `uv.lock`, and
+1. process-level `ESP_HARDWARE_KNOWLEDGE_ROOT`;
+2. user-level `ESP_HARDWARE_KNOWLEDGE_ROOT`;
+3. a bounded current-directory/ancestor candidate containing `pyproject.toml`, `uv.lock`, and
    `src/espdocs`.
 
 For a project root, run this exact boundary:
@@ -806,7 +805,7 @@ Desktop fallback and do not install packages.
 - [ ] **Step 5: Test launcher discovery from an unrelated working directory**
 
 In `tests/test_launcher.py`, create a temporary fake `uv.cmd` that records arguments, set
-`ESPDOCS_PROJECT_ROOT` to the real repository, start PowerShell in another temporary directory, and
+`ESP_HARDWARE_KNOWLEDGE_ROOT` to the real repository, start PowerShell in another temporary directory, and
 assert the recorded arguments use the resolved fixture path:
 
 ```python
