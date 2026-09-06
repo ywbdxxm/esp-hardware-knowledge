@@ -3,6 +3,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL_ROOT = REPO_ROOT / "skills" / "esp32-ai-hardware-engineering"
 DOCLING_SKILL_ROOT = REPO_ROOT / "skills" / "docling-local-document-engineering"
+HARDWARE_RESEARCH_SKILL_ROOT = REPO_ROOT / "skills" / "hardware-document-research"
 
 
 def test_codex_agents_requires_esp32_skill_for_code_and_documentation() -> None:
@@ -130,3 +131,26 @@ def test_readme_documents_cross_machine_codex_setup() -> None:
     assert "uv tool install docling" in text
     assert "IDF_PATH" in text
     assert "docling-local-document-engineering" in text
+
+
+def test_hardware_research_skill_has_portable_exact_source_contract() -> None:
+    skill = (HARDWARE_RESEARCH_SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+    workflow = (
+        HARDWARE_RESEARCH_SKILL_ROOT / "references" / "evidence-workflow.md"
+    ).read_text(encoding="utf-8")
+    context = (
+        HARDWARE_RESEARCH_SKILL_ROOT / "references" / "project-context.md"
+    ).read_text(encoding="utf-8")
+    metadata = (
+        HARDWARE_RESEARCH_SKILL_ROOT / "agents" / "openai.yaml"
+    ).read_text(encoding="utf-8")
+
+    assert "exact part" in skill.casefold()
+    assert "inventory" in workflow
+    assert "--compact" in workflow
+    assert "source" in workflow
+    assert "official vendor" in workflow.casefold()
+    assert "ESP_HARDWARE_KNOWLEDGE_ROOT" in context
+    assert "Desktop\\AI-HRADWARE" not in skill + workflow + context
+    assert "ESP-IDF" not in workflow
+    assert "allow_implicit_invocation: true" in metadata

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Hardware Document Research"
+  short_description: "Exact-part hardware research with authoritative evidence"
+  default_prompt: "Use $hardware-document-research to verify this component question against exact source documentation."
+
+policy:
+  allow_implicit_invocation: true
