@@ -67,7 +67,7 @@ def build_converter() -> DocumentConverter:
         allow_external_plugins=False,
         do_ocr=True,
         ocr_options=RapidOcrOptions(
-            mode=OcrMode.FULL_PAGE,
+            mode=OcrMode.PDF_AWARE_LAYOUT_REGIONS,
             lang=["chinese"],
             backend="onnxruntime",
         ),

@@ -3,6 +3,8 @@ from types import SimpleNamespace
 
 import pytest
 from docling.datamodel.accelerator_options import AcceleratorDevice
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import OcrMode
 
 import espdocs.parser as parser_module
 from espdocs.models import DocumentRecord
@@ -164,3 +166,17 @@ def test_build_converter_uses_resolved_accelerator(monkeypatch) -> None:
     parser_module.build_converter()
 
     assert calls == [True]
+
+
+def test_build_converter_preserves_native_pdf_text_before_ocr(monkeypatch) -> None:
+    monkeypatch.setattr(
+        parser_module,
+        "resolve_accelerator_device",
+        lambda: AcceleratorDevice.CPU,
+    )
+
+    converter = parser_module.build_converter()
+    options = converter.format_to_options[InputFormat.PDF].pipeline_options
+
+    assert options.do_ocr is True
+    assert options.ocr_options.mode is OcrMode.PDF_AWARE_LAYOUT_REGIONS
